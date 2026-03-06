@@ -12,9 +12,7 @@ import { ContactSection } from './components/ContactSection';
 import { fetchEvents, fetchConfig, AppConfig } from './services/dataService'; // Importamos el servicio de datos
 import { 
   auth, 
-  signInWithGoogle, 
   logout, 
-  checkRedirectResult,
   getUserPlans,
   UserPlan,
   getUserProfile
@@ -116,32 +114,6 @@ const App: React.FC = () => {
       }
     });
     
-    // 2. Check for redirect result (captures session after returning from Google)
-    checkRedirectResult().then(async (user) => {
-      if (user) {
-        console.log("User signed in via redirect (checkRedirectResult):", user.displayName);
-        const userProfile = await getUserProfile(user.uid);
-        const enhancedUser = { ...user, ...userProfile } as any;
-        setCurrentUser(enhancedUser);
-        
-        const plans = await getUserPlans(user.uid);
-        setUserPlans(plans);
-      } else {
-         // 3. Fallback: Check if auth.currentUser is already populated but listener hasn't fired
-         if (auth.currentUser) {
-             console.log("Fallback: auth.currentUser exists:", auth.currentUser.email);
-             const userProfile = await getUserProfile(auth.currentUser.uid);
-             const enhancedUser = { ...auth.currentUser, ...userProfile } as any;
-             setCurrentUser(enhancedUser);
-             
-             const plans = await getUserPlans(auth.currentUser.uid);
-             setUserPlans(plans);
-         }
-      }
-    }).catch(err => {
-      console.error("Redirect login error:", err);
-    });
-
     return () => unsubscribe();
   }, []);
 
@@ -556,25 +528,28 @@ const App: React.FC = () => {
                 <div className="pt-4 border-t border-gray-100 mt-2">
                   {currentUser ? (
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
+                      <button 
+                        onClick={() => { setIsProfileModalOpen(true); setIsMobileMenuOpen(false); }}
+                        className="flex items-center space-x-3 text-left group"
+                      >
                         {currentUser.photoURL ? (
                           <img 
                             src={currentUser.photoURL} 
                             alt="Perfil" 
-                            className="w-8 h-8 rounded-full"
+                            className="w-8 h-8 rounded-full border border-gray-200 group-hover:border-indigo-400 object-cover"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold group-hover:bg-indigo-200">
                              {currentUser.displayName ? currentUser.displayName[0].toUpperCase() : (currentUser.email ? currentUser.email[0].toUpperCase() : <UserIcon className="w-4 h-4" />)}
                           </div>
                         )}
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-600">
                           {currentUser.displayName || currentUser.email?.split('@')[0]}
                         </span>
-                      </div>
+                      </button>
                       <button 
                         onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
-                        className="text-sm text-red-500 font-medium"
+                        className="text-sm text-red-500 font-medium px-2 py-1 hover:bg-red-50 rounded-md transition-colors"
                       >
                         Salir
                       </button>
@@ -594,20 +569,139 @@ const App: React.FC = () => {
         )}
       </nav>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 container mx-auto px-2 sm:px-4 max-w-7xl py-8">
         
         {/* VIEW: HOME */}
         {viewMode === 'home' && (
           <div className="animate-fade-in">
             {/* Header / Hero */}
-            <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-900 mb-2 tracking-tight">
                 ¿Qué <span className="text-indigo-600">Plan?</span>
               </h1>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto leading-relaxed">
                 La cartelera cultural definitiva de tu ciudad. Encuentra música, arte, teatro y más.
               </p>
             </div>
+
+            {/* ARMA TU PLAN - The Gray Box */}
+            <section id="arma-tu-plan" className="mb-8 sm:mb-12">
+              <div className="bg-gray-100 sm:bg-gray-200 rounded-lg p-3 sm:p-6 shadow-sm border border-gray-200 sm:border-gray-300">
+                <h2 className="text-lg sm:text-2xl font-bold text-gray-800 text-center mb-3 sm:mb-6">Arma tu plan!</h2>
+                <p className="text-center text-gray-600 mb-4 sm:mb-6 -mt-2 sm:-mt-4 text-xs sm:text-sm">Filtra por fecha, hora y categoría.</p>
+                
+                <div className="flex flex-col md:flex-row items-center justify-center gap-3 sm:gap-6 md:gap-8">
+                  
+                  {/* Date Filter Group */}
+                  <div className="flex flex-col items-center gap-1 sm:gap-2 w-full md:w-auto">
+                    <div className="flex items-center gap-2 w-full">
+                      <Calendar className="w-5 h-5 sm:w-8 sm:h-8 text-gray-600 sm:text-gray-800 flex-shrink-0" />
+                      <div className="flex gap-2 w-full">
+                        <input 
+                           type="date" 
+                           className="p-1.5 sm:p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 w-full"
+                           value={dateFilterStart}
+                           onChange={(e) => setDateFilterStart(e.target.value)}
+                           aria-label="Fecha inicio"
+                        />
+                         <input 
+                           type="date" 
+                           className="p-1.5 sm:p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 w-full"
+                           value={dateFilterEnd}
+                           onChange={(e) => setDateFilterEnd(e.target.value)}
+                           aria-label="Fecha fin (opcional)"
+                           placeholder="Fin"
+                         />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Plus Sign */}
+                  <div className="hidden md:block">
+                    <Plus className="w-6 h-6 text-gray-400" />
+                  </div>
+
+                  {/* Time Filter Group */}
+                  <div className="flex flex-col items-center gap-1 sm:gap-2 w-full md:w-auto">
+                    <div className="flex items-center gap-2 w-full">
+                      <Clock className="w-5 h-5 sm:w-8 sm:h-8 text-gray-600 sm:text-gray-800 flex-shrink-0" />
+                      <div className="flex gap-2 w-full">
+                        <input 
+                           type="time" 
+                           className="p-1.5 sm:p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 w-full"
+                           value={timeFilterStart}
+                           onChange={(e) => setTimeFilterStart(e.target.value)}
+                           aria-label="Hora inicio"
+                        />
+                        <input 
+                            type="time" 
+                            className="p-1.5 sm:p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 w-full"
+                            value={timeFilterEnd}
+                            onChange={(e) => setTimeFilterEnd(e.target.value)}
+                            aria-label="Hora fin"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Plus Sign */}
+                  <div className="hidden md:block">
+                    <Plus className="w-6 h-6 text-gray-400" />
+                  </div>
+
+                  {/* List / Category Indicator */}
+                  <div className="flex flex-col items-center gap-1 sm:gap-2 w-full md:w-auto relative" ref={categoryDropdownRef}>
+                    <div className="flex items-center gap-2 cursor-pointer w-full" onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}>
+                      <List className="w-5 h-5 sm:w-8 sm:h-8 text-gray-600 sm:text-gray-800 flex-shrink-0" />
+                      <div className="text-xs sm:text-sm font-bold text-gray-700 bg-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-md border border-gray-300 w-full sm:min-w-[120px] text-center flex items-center justify-between hover:border-indigo-500 transition-colors">
+                        <span>
+                          {planCategories.length === 0 
+                            ? 'Todas' 
+                            : `${planCategories.length} selec.`
+                          }
+                        </span>
+                        <ChevronLeft className={`w-3 h-3 sm:w-4 sm:h-4 ml-2 transition-transform ${isCategoryDropdownOpen ? '-rotate-90' : 'rotate-0'}`} />
+                      </div>
+                    </div>
+
+                    {/* Category Dropdown */}
+                    {isCategoryDropdownOpen && (
+                      <div className="absolute top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-2 animate-fade-in">
+                        <div className="flex justify-between items-center mb-2 px-2">
+                          <span className="text-xs font-bold text-gray-500 uppercase">Categorías</span>
+                          {planCategories.length > 0 && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setPlanCategories([]); }}
+                              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                            >
+                              Limpiar
+                            </button>
+                          )}
+                        </div>
+                        <div className="max-h-60 overflow-y-auto space-y-1">
+                          {categoryList.filter(c => c !== EventCategory.ALL).map((cat) => {
+                            const isSelected = planCategories.includes(cat);
+                            return (
+                              <button
+                                key={cat}
+                                onClick={(e) => { e.stopPropagation(); togglePlanCategory(cat); }}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${
+                                  isSelected ? 'bg-indigo-50 text-indigo-700 font-medium' : 'hover:bg-gray-50 text-gray-700'
+                                }`}
+                              >
+                                <span>{cat}</span>
+                                {isSelected && <Check className="w-4 h-4 text-indigo-600" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+            </section>
 
             {/* Today's Highlights (Carousel) */}
             {todayEvents.length > 0 && (
@@ -656,125 +750,6 @@ const App: React.FC = () => {
               </section>
             )}
 
-            {/* ARMA TU PLAN - The Gray Box */}
-            <section id="arma-tu-plan" className="mb-12 pt-8 border-t border-gray-200">
-              <div className="bg-gray-200 rounded-lg p-6 shadow-sm border border-gray-300">
-                <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">Arma tu plan!</h2>
-                <p className="text-center text-gray-600 mb-6 -mt-4 text-sm">Filtra por fecha, hora y categoría para encontrar tu plan perfecto.</p>
-                
-                <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8">
-                  
-                  {/* Date Filter Group */}
-                  <div className="flex flex-col items-center gap-2 w-full md:w-auto">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-8 h-8 text-gray-800" />
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <input 
-                           type="date" 
-                           className="p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 w-full"
-                           value={dateFilterStart}
-                           onChange={(e) => setDateFilterStart(e.target.value)}
-                           aria-label="Fecha inicio"
-                        />
-                         <input 
-                           type="date" 
-                           className="p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 w-full"
-                           value={dateFilterEnd}
-                           onChange={(e) => setDateFilterEnd(e.target.value)}
-                           aria-label="Fecha fin (opcional)"
-                           placeholder="Fin"
-                         />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Plus Sign */}
-                  <div className="hidden md:block">
-                    <Plus className="w-6 h-6 text-gray-400" />
-                  </div>
-
-                  {/* Time Filter Group */}
-                  <div className="flex flex-col items-center gap-2 w-full md:w-auto">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-8 h-8 text-gray-800" />
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <input 
-                           type="time" 
-                           className="p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 w-full"
-                           value={timeFilterStart}
-                           onChange={(e) => setTimeFilterStart(e.target.value)}
-                           aria-label="Hora inicio"
-                        />
-                        <input 
-                            type="time" 
-                            className="p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 w-full"
-                            value={timeFilterEnd}
-                            onChange={(e) => setTimeFilterEnd(e.target.value)}
-                            aria-label="Hora fin"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Plus Sign */}
-                  <div className="hidden md:block">
-                    <Plus className="w-6 h-6 text-gray-400" />
-                  </div>
-
-                  {/* List / Category Indicator */}
-                  <div className="flex flex-col items-center gap-2 w-full md:w-auto relative" ref={categoryDropdownRef}>
-                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}>
-                      <List className="w-8 h-8 text-gray-800" />
-                      <div className="text-sm font-bold text-gray-700 bg-white px-3 py-2 rounded-md border border-gray-300 min-w-[120px] text-center flex items-center justify-between hover:border-indigo-500 transition-colors">
-                        <span>
-                          {planCategories.length === 0 
-                            ? 'Todas' 
-                            : `${planCategories.length} selec.`
-                          }
-                        </span>
-                        <ChevronLeft className={`w-4 h-4 ml-2 transition-transform ${isCategoryDropdownOpen ? '-rotate-90' : 'rotate-0'}`} />
-                      </div>
-                    </div>
-
-                    {/* Category Dropdown */}
-                    {isCategoryDropdownOpen && (
-                      <div className="absolute top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-2 animate-fade-in">
-                        <div className="flex justify-between items-center mb-2 px-2">
-                          <span className="text-xs font-bold text-gray-500 uppercase">Categorías</span>
-                          {planCategories.length > 0 && (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setPlanCategories([]); }}
-                              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
-                            >
-                              Limpiar
-                            </button>
-                          )}
-                        </div>
-                        <div className="max-h-60 overflow-y-auto space-y-1">
-                          {categoryList.filter(c => c !== EventCategory.ALL).map((cat) => {
-                            const isSelected = planCategories.includes(cat);
-                            return (
-                              <button
-                                key={cat}
-                                onClick={(e) => { e.stopPropagation(); togglePlanCategory(cat); }}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between transition-colors ${
-                                  isSelected ? 'bg-indigo-50 text-indigo-700 font-medium' : 'hover:bg-gray-50 text-gray-700'
-                                }`}
-                              >
-                                <span>{cat}</span>
-                                {isSelected && <Check className="w-4 h-4 text-indigo-600" />}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-              </div>
-            </section>
-
             {/* PLAN RESULTS */}
             {isPlanActive && (
               <section id="plan-results" className="animate-fade-in space-y-6">
@@ -803,7 +778,7 @@ const App: React.FC = () => {
                       <p className="mt-1 text-sm text-gray-500">Intenta ampliar tu rango de fechas, horario o categorías.</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                       {planEvents.map(event => (
                         <EventCard 
                           key={event.id} 
@@ -883,7 +858,7 @@ const App: React.FC = () => {
                     <h3 className="mt-2 text-sm font-medium text-gray-900">No hay eventos en esta categoría</h3>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                     {explorationEvents.map(event => (
                       <EventCard 
                         key={event.id} 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, Loader2 } from 'lucide-react';
-import { signInWithGoogle, loginWithEmail, registerWithEmail } from '../services/firebase';
+import { loginWithEmail, registerWithEmail } from '../services/firebase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -15,18 +15,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
-
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      await signInWithGoogle();
-      // Redirect happens, so no need to close modal immediately as page will reload/redirect
-    } catch (err: any) {
-      setError('Error al iniciar con Google. Intenta de nuevo.');
-      setIsLoading(false);
-    }
-  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,25 +65,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <p className="text-gray-500 mt-2 text-sm">
               {mode === 'login' ? 'Ingresa para guardar tus planes' : 'Regístrate para personalizar tu experiencia'}
             </p>
-          </div>
-
-          {/* Google Button */}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center space-x-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-xl transition-all mb-6"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-            <span>Continuar con Google</span>
-          </button>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">o con correo</span>
-            </div>
           </div>
 
           {/* Email Form */}

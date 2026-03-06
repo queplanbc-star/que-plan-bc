@@ -1,12 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
-  GoogleAuthProvider, 
-  signInWithRedirect, 
   signOut, 
-  getRedirectResult,
-  setPersistence,
-  browserLocalPersistence,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -46,7 +41,6 @@ export const auth = getAuth(app);
 (auth as any).config.authDomain = "base-de-datos-que-plan.firebaseapp.com";
 
 export const db = getFirestore(app);
-export const googleProvider = new GoogleAuthProvider();
 
 export interface UserPlan {
   id: string;
@@ -54,17 +48,6 @@ export interface UserPlan {
   eventIds: string[];
   createdAt: any;
 }
-
-export const signInWithGoogle = async () => {
-  try {
-    console.log("Attempting to set persistence and sign in...");
-    await setPersistence(auth, browserLocalPersistence);
-    await signInWithRedirect(auth, googleProvider);
-  } catch (error) {
-    console.error("Error signing in with Google (handled gracefully):", error);
-    // We don't throw here to prioritize the email flow as requested
-  }
-};
 
 export const loginWithEmail = (email, password) => {
   return signInWithEmailAndPassword(auth, email, password);
@@ -209,22 +192,6 @@ export const getFavorites = async (userId: string): Promise<string[]> => {
   } catch (error) {
     console.error("Error fetching favorites:", error);
     return [];
-  }
-};
-
-export const checkRedirectResult = async () => {
-  try {
-    console.log("Checking redirect result...");
-    const result = await getRedirectResult(auth);
-    if (result) {
-        console.log("Redirect result found:", result.user.email);
-    } else {
-        console.log("No redirect result found.");
-    }
-    return result?.user;
-  } catch (error) {
-    console.error("Error getting redirect result", error);
-    throw error;
   }
 };
 
