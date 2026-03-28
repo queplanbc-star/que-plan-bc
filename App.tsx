@@ -9,6 +9,7 @@ import { PlanDrawer } from './components/PlanDrawer';
 import { AddToPlanModal } from './components/AddToPlanModal';
 import { ProfileModal } from './components/ProfileModal';
 import { ContactSection } from './components/ContactSection';
+import { DonationModal } from './components/DonationModal';
 import { fetchEvents, fetchConfig, AppConfig } from './services/dataService'; // Importamos el servicio de datos
 import { 
   auth, 
@@ -78,6 +79,124 @@ const App: React.FC = () => {
   const todayScrollRef = useRef<HTMLDivElement>(null);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
+  // --- History API Navigation Helpers ---
+  const handleOpenEvent = (event: CulturalEvent) => {
+    window.history.pushState({ view: 'event_preview' }, '');
+    setSelectedEvent(event);
+  };
+
+  const handleCloseEvent = () => {
+    if (window.history.state?.view === 'event_preview') {
+      window.history.back();
+    } else {
+      setSelectedEvent(null);
+    }
+  };
+
+  const handleOpenPlanDrawer = () => {
+    window.history.pushState({ view: 'plan_drawer' }, '');
+    setIsPlanDrawerOpen(true);
+  };
+
+  const handleClosePlanDrawer = () => {
+    if (window.history.state?.view === 'plan_drawer') {
+      window.history.back();
+    } else {
+      setIsPlanDrawerOpen(false);
+    }
+  };
+
+  const handleOpenAuthModal = () => {
+    window.history.pushState({ view: 'auth_modal' }, '');
+    setIsAuthModalOpen(true);
+  };
+
+  const handleCloseAuthModal = () => {
+    if (window.history.state?.view === 'auth_modal') {
+      window.history.back();
+    } else {
+      setIsAuthModalOpen(false);
+    }
+  };
+
+  const handleOpenProfileModal = () => {
+    window.history.pushState({ view: 'profile_modal' }, '');
+    setIsProfileModalOpen(true);
+  };
+
+  const handleCloseProfileModal = () => {
+    if (window.history.state?.view === 'profile_modal') {
+      window.history.back();
+    } else {
+      setIsProfileModalOpen(false);
+    }
+  };
+
+  const handleToggleMobileMenu = () => {
+    if (isMobileMenuOpen) {
+      if (window.history.state?.view === 'mobile_menu') window.history.back();
+      else setIsMobileMenuOpen(false);
+    } else {
+      window.history.pushState({ view: 'mobile_menu' }, '');
+      setIsMobileMenuOpen(true);
+    }
+  };
+
+  const handleCloseMobileMenu = () => {
+    if (window.history.state?.view === 'mobile_menu') {
+      window.history.back();
+    } else {
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  const handleOpenDonationModal = () => {
+    if (isMobileMenuOpen) {
+      window.history.replaceState({ view: 'donation_modal' }, '');
+      setIsMobileMenuOpen(false);
+    } else {
+      window.history.pushState({ view: 'donation_modal' }, '');
+    }
+    setShowDonationModal(true);
+  };
+
+  const handleCloseDonationModal = () => {
+    if (window.history.state?.view === 'donation_modal') {
+      window.history.back();
+    } else {
+      setShowDonationModal(false);
+    }
+  };
+
+  // Listen for popstate (back button)
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const view = e.state?.view;
+      if (view !== 'event_preview') setSelectedEvent(null);
+      if (view !== 'plan_drawer') setIsPlanDrawerOpen(false);
+      if (view !== 'auth_modal') setIsAuthModalOpen(false);
+      if (view !== 'profile_modal') setIsProfileModalOpen(false);
+      if (view !== 'mobile_menu') setIsMobileMenuOpen(false);
+      if (view !== 'donation_modal') setShowDonationModal(false);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Lock scroll when any modal is open
+  useEffect(() => {
+    const isAnyModalOpen = !!selectedEvent || isPlanDrawerOpen || isAuthModalOpen || isProfileModalOpen || isMobileMenuOpen || showDonationModal;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedEvent, isPlanDrawerOpen, isAuthModalOpen, isProfileModalOpen, isMobileMenuOpen, showDonationModal]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -118,12 +237,23 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = async () => {
-    setIsAuthModalOpen(true);
+    if (isMobileMenuOpen) {
+      if (window.history.state?.view === 'mobile_menu') {
+        window.history.replaceState({ view: 'auth_modal' }, '');
+      } else {
+        window.history.pushState({ view: 'auth_modal' }, '');
+      }
+      setIsMobileMenuOpen(false);
+      setIsAuthModalOpen(true);
+    } else {
+      handleOpenAuthModal();
+    }
   };
 
   const handleLogout = async () => {
     try {
       await logout();
+      handleCloseProfileModal();
     } catch (error) {
       console.error("Logout failed", error);
     }
@@ -187,6 +317,22 @@ const App: React.FC = () => {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  };
+
+  const handleGoHome = () => {
+    setViewMode('home');
+    setSearchQuery('');
+    setExplorationCategories([]);
+    setPlanCategories([]);
+    setDateFilterStart('');
+    setDateFilterEnd('');
+    setTimeFilterStart('');
+    setTimeFilterEnd('');
+    setSelectedEvent(null);
+    setIsMobileMenuOpen(false);
+    setSharedEventIds([]);
+    window.history.replaceState({}, document.title, window.location.pathname);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // 1. EXPLORATION FILTER LOGIC
@@ -279,7 +425,7 @@ const App: React.FC = () => {
   // Plan Management (Trigger Modal)
   const handleAddToPlanClick = (event: CulturalEvent) => {
     if (!currentUser) {
-      setIsAuthModalOpen(true);
+      handleOpenAuthModal();
       return;
     }
     setEventToAdd(event);
@@ -346,7 +492,7 @@ const App: React.FC = () => {
         }
       }
       // Close mobile menu if open
-      if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+      if (isMobileMenuOpen) handleCloseMobileMenu();
     }
   };
 
@@ -369,7 +515,7 @@ const App: React.FC = () => {
       <nav className="bg-white shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center cursor-pointer" onClick={() => setViewMode('home')}>
+            <div className="flex items-center cursor-pointer" onClick={handleGoHome}>
               <Calendar className="h-8 w-8 text-indigo-600" />
               <span className="ml-2 text-xl font-bold text-gray-900">Qué Plan</span>
             </div>
@@ -389,10 +535,10 @@ const App: React.FC = () => {
               </div>
 
               <button 
-                onClick={() => setViewMode('home')}
+                onClick={handleGoHome}
                 className={`text-sm font-medium hover:text-indigo-600 ${viewMode === 'home' ? 'text-indigo-600' : 'text-gray-500'}`}
               >
-                Explorar
+                Inicio
               </button>
 
               {/* Admin Button - Only visible if ?admin=true in URL */}
@@ -407,7 +553,7 @@ const App: React.FC = () => {
 
               {/* Donation Button */}
               <button 
-                onClick={() => setShowDonationModal(true)}
+                onClick={handleOpenDonationModal}
                 className="text-sm font-medium text-pink-500 hover:text-pink-600 flex items-center bg-pink-50 px-3 py-1.5 rounded-full transition-colors"
               >
                 <Heart className="w-4 h-4 mr-1 fill-current" /> Apoyar
@@ -438,7 +584,7 @@ const App: React.FC = () => {
               </button>
 
               <button 
-                onClick={() => setIsPlanDrawerOpen(true)}
+                onClick={handleOpenPlanDrawer}
                 className="relative p-2 rounded-full bg-indigo-50 hover:bg-indigo-100 transition-colors"
               >
                 <ShoppingBag className="h-6 w-6 text-indigo-600" />
@@ -454,7 +600,7 @@ const App: React.FC = () => {
                 <div className="flex items-center space-x-3 pl-2 border-l border-gray-200">
                   <div className="flex flex-col items-end hidden lg:flex">
                     <button 
-                      onClick={() => setIsProfileModalOpen(true)}
+                      onClick={handleOpenProfileModal}
                       className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors text-right"
                     >
                       {currentUser.displayName || currentUser.email?.split('@')[0]}
@@ -468,7 +614,7 @@ const App: React.FC = () => {
                   </div>
                   
                   <button 
-                    onClick={() => setIsProfileModalOpen(true)}
+                    onClick={handleOpenProfileModal}
                     className="relative group"
                   >
                     {currentUser.photoURL ? (
@@ -497,7 +643,7 @@ const App: React.FC = () => {
 
             {/* Mobile menu button */}
             <div className="flex items-center md:hidden">
-              <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-500 hover:text-gray-700">
+              <button onClick={handleToggleMobileMenu} className="text-gray-500 hover:text-gray-700">
                 {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
             </div>
@@ -516,20 +662,36 @@ const App: React.FC = () => {
                   onKeyDown={handleSearchSubmit}
               />
               <div className="flex flex-col space-y-2">
-                <button onClick={() => { setViewMode('home'); setIsMobileMenuOpen(false); }} className="text-left font-medium text-gray-700 py-2">Explorar</button>
-                <button onClick={() => { setIsPlanDrawerOpen(true); setIsMobileMenuOpen(false); }} className="text-left font-medium text-gray-700 py-2">
+                <button onClick={handleGoHome} className="text-left font-medium text-gray-700 py-2">Inicio</button>
+                <button onClick={() => { 
+                  if (window.history.state?.view === 'mobile_menu') {
+                    window.history.replaceState({ view: 'plan_drawer' }, '');
+                  } else {
+                    window.history.pushState({ view: 'plan_drawer' }, '');
+                  }
+                  setIsMobileMenuOpen(false);
+                  setIsPlanDrawerOpen(true);
+                }} className="text-left font-medium text-gray-700 py-2">
                   Mi Plan ({userPlans.reduce((acc, plan) => acc + plan.eventIds.length, 0)})
                 </button>
                 {isAdminMode && (
-                  <button onClick={() => { setViewMode('admin'); setIsMobileMenuOpen(false); }} className="text-left font-medium text-gray-700 py-2">Base de Datos</button>
+                  <button onClick={() => { setViewMode('admin'); handleCloseMobileMenu(); }} className="text-left font-medium text-gray-700 py-2">Base de Datos</button>
                 )}
-                <button onClick={() => { setShowDonationModal(true); setIsMobileMenuOpen(false); }} className="text-left font-medium text-pink-600 py-2 flex items-center"><Heart className="w-4 h-4 mr-2" /> Apoyar el proyecto</button>
+                <button onClick={handleOpenDonationModal} className="text-left font-medium text-pink-600 py-2 flex items-center"><Heart className="w-4 h-4 mr-2" /> Apoyar el proyecto</button>
                 
                 <div className="pt-4 border-t border-gray-100 mt-2">
                   {currentUser ? (
                     <div className="flex items-center justify-between">
                       <button 
-                        onClick={() => { setIsProfileModalOpen(true); setIsMobileMenuOpen(false); }}
+                        onClick={() => { 
+                          if (window.history.state?.view === 'mobile_menu') {
+                            window.history.replaceState({ view: 'profile_modal' }, '');
+                          } else {
+                            window.history.pushState({ view: 'profile_modal' }, '');
+                          }
+                          setIsMobileMenuOpen(false);
+                          setIsProfileModalOpen(true);
+                        }}
                         className="flex items-center space-x-3 text-left group"
                       >
                         {currentUser.photoURL ? (
@@ -548,7 +710,7 @@ const App: React.FC = () => {
                         </span>
                       </button>
                       <button 
-                        onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                        onClick={() => { handleLogout(); handleCloseMobileMenu(); }}
                         className="text-sm text-red-500 font-medium px-2 py-1 hover:bg-red-50 rounded-md transition-colors"
                       >
                         Salir
@@ -556,7 +718,7 @@ const App: React.FC = () => {
                     </div>
                   ) : (
                     <button 
-                      onClick={() => { handleLogin(); setIsMobileMenuOpen(false); }}
+                      onClick={handleLogin}
                       className="w-full flex items-center justify-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium"
                     >
                       <UserIcon className="w-4 h-4" />
@@ -584,9 +746,57 @@ const App: React.FC = () => {
               </p>
             </div>
 
+            {/* Today's Highlights (Carousel) */}
+            {todayEvents.length > 0 && sharedEventIds.length === 0 && (
+              <section className="mb-12 relative">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">Hoy</h2>
+                </div>
+                
+                <div className="relative group">
+                    {/* Left Arrow Button */}
+                    <button 
+                        onClick={() => scrollToday('left')}
+                        className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white p-2 rounded-full shadow-lg border border-gray-100 text-gray-600 hover:text-indigo-600 hover:scale-110 transition-all hidden md:flex opacity-0 group-hover:opacity-100"
+                        aria-label="Anterior"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
+
+                    {/* Scroll Container */}
+                    <div 
+                        ref={todayScrollRef}
+                        className="flex overflow-x-auto gap-6 pb-4 snap-x scroll-smooth no-scrollbar"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                    {todayEvents.map(event => (
+                        <div key={event.id} className="min-w-[280px] snap-center">
+                        <EventCard 
+                            event={event} 
+                            isInPlan={userPlans.some(p => p.eventIds.includes(event.id))}
+                            onTogglePlan={handleAddToPlanClick}
+                            onClick={() => handleOpenEvent(event)}
+                        />
+                        </div>
+                    ))}
+                    </div>
+
+                     {/* Right Arrow Button */}
+                     <button 
+                        onClick={() => scrollToday('right')}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white p-2 rounded-full shadow-lg border border-gray-100 text-gray-600 hover:text-indigo-600 hover:scale-110 transition-all hidden md:flex opacity-0 group-hover:opacity-100"
+                        aria-label="Siguiente"
+                    >
+                        <ChevronRight className="w-6 h-6" />
+                    </button>
+                </div>
+              </section>
+            )}
+
             {/* ARMA TU PLAN - The Gray Box */}
-            <section id="arma-tu-plan" className="mb-8 sm:mb-12">
-              <div className="bg-gray-100 sm:bg-gray-200 rounded-lg p-3 sm:p-6 shadow-sm border border-gray-200 sm:border-gray-300">
+            {sharedEventIds.length === 0 && (
+              <section id="arma-tu-plan" className="mb-8 sm:mb-12">
+                <div className="bg-gray-100 sm:bg-gray-200 rounded-lg p-3 sm:p-6 shadow-sm border border-gray-200 sm:border-gray-300">
                 <h2 className="text-lg sm:text-2xl font-bold text-gray-800 text-center mb-3 sm:mb-6">Arma tu plan!</h2>
                 <p className="text-center text-gray-600 mb-4 sm:mb-6 -mt-2 sm:-mt-4 text-xs sm:text-sm">Filtra por fecha, hora y categoría.</p>
                 
@@ -702,56 +912,10 @@ const App: React.FC = () => {
                 </div>
               </div>
             </section>
-
-            {/* Today's Highlights (Carousel) */}
-            {todayEvents.length > 0 && (
-              <section className="mb-12 relative">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800">Hoy</h2>
-                </div>
-                
-                <div className="relative group">
-                    {/* Left Arrow Button */}
-                    <button 
-                        onClick={() => scrollToday('left')}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white p-2 rounded-full shadow-lg border border-gray-100 text-gray-600 hover:text-indigo-600 hover:scale-110 transition-all hidden md:flex opacity-0 group-hover:opacity-100"
-                        aria-label="Anterior"
-                    >
-                        <ChevronLeft className="w-6 h-6" />
-                    </button>
-
-                    {/* Scroll Container */}
-                    <div 
-                        ref={todayScrollRef}
-                        className="flex overflow-x-auto gap-6 pb-4 snap-x scroll-smooth no-scrollbar"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                    >
-                    {todayEvents.map(event => (
-                        <div key={event.id} className="min-w-[280px] snap-center">
-                        <EventCard 
-                            event={event} 
-                            isInPlan={userPlans.some(p => p.eventIds.includes(event.id))}
-                            onTogglePlan={handleAddToPlanClick}
-                            onClick={() => setSelectedEvent(event)}
-                        />
-                        </div>
-                    ))}
-                    </div>
-
-                     {/* Right Arrow Button */}
-                     <button 
-                        onClick={() => scrollToday('right')}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white p-2 rounded-full shadow-lg border border-gray-100 text-gray-600 hover:text-indigo-600 hover:scale-110 transition-all hidden md:flex opacity-0 group-hover:opacity-100"
-                        aria-label="Siguiente"
-                    >
-                        <ChevronRight className="w-6 h-6" />
-                    </button>
-                </div>
-              </section>
             )}
 
             {/* PLAN RESULTS */}
-            {isPlanActive && (
+            {isPlanActive && sharedEventIds.length === 0 && (
               <section id="plan-results" className="animate-fade-in space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-gray-800">
@@ -785,7 +949,7 @@ const App: React.FC = () => {
                           event={event} 
                           isInPlan={userPlans.some(p => p.eventIds.includes(event.id))}
                           onTogglePlan={handleAddToPlanClick}
-                          onClick={() => setSelectedEvent(event)}
+                          onClick={() => handleOpenEvent(event)}
                         />
                       ))}
                     </div>
@@ -794,8 +958,9 @@ const App: React.FC = () => {
             )}
 
             {/* Category Buttons (Multi-select) - EXPLORATION */}
-            <section className="mb-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-2">
+            {sharedEventIds.length === 0 && (
+              <section className="mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-2">
                 {categoryList.map((cat) => {
                   const isSelected = cat === EventCategory.ALL 
                     ? explorationCategories.length === 0 
@@ -818,27 +983,23 @@ const App: React.FC = () => {
                 })}
               </div>
             </section>
+            )}
 
             {/* EXPLORATION RESULTS */}
             <section id="exploration-results" className="animate-fade-in space-y-6 mb-16">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-gray-800">
+                <div className={`flex ${sharedEventIds.length > 0 ? 'flex-col sm:flex-row sm:items-center justify-between gap-4 text-center sm:text-left' : 'items-center justify-between'}`}>
+                  <h3 className={`${sharedEventIds.length > 0 ? 'text-2xl sm:text-3xl text-indigo-600' : 'text-xl text-gray-800'} font-bold`}>
                     {sharedEventIds.length > 0 
-                      ? 'Eventos Compartidos' 
+                      ? '¡Mira el plan que armaron para ti! ✨' 
                       : (explorationEvents.length === 0 ? 'Sin resultados' : 'Exploración de Eventos')}
                   </h3>
                   
                   {sharedEventIds.length > 0 ? (
                     <button 
-                      onClick={() => {
-                        setSharedEventIds([]);
-                        // Remove query param from URL without reload
-                        const newUrl = window.location.pathname;
-                        window.history.pushState({}, '', newUrl);
-                      }}
-                      className="text-sm bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 font-medium transition-colors shadow-sm"
+                      onClick={handleGoHome}
+                      className="text-sm bg-indigo-600 text-white px-6 py-2.5 rounded-full hover:bg-indigo-700 font-medium transition-colors shadow-sm w-full sm:w-auto"
                     >
-                      Ver toda la cartelera de Ensenada
+                      Ver toda la cartelera
                     </button>
                   ) : (
                     explorationCategories.length > 0 && (
@@ -865,7 +1026,7 @@ const App: React.FC = () => {
                         event={event} 
                         isInPlan={userPlans.some(p => p.eventIds.includes(event.id))}
                         onTogglePlan={handleAddToPlanClick}
-                        onClick={() => setSelectedEvent(event)}
+                        onClick={() => handleOpenEvent(event)}
                       />
                     ))}
                   </div>
@@ -895,19 +1056,19 @@ const App: React.FC = () => {
       {/* AUTH MODAL */}
       <AuthModal 
         isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
+        onClose={handleCloseAuthModal} 
       />
 
       {/* PLAN DRAWER */}
       <PlanDrawer
         isOpen={isPlanDrawerOpen}
-        onClose={() => setIsPlanDrawerOpen(false)}
+        onClose={handleClosePlanDrawer}
         currentUser={currentUser}
         userPlans={userPlans}
         allEvents={events}
         onPlanCreated={refreshPlans}
         onEventRemoved={refreshPlans}
-        onEventClick={setSelectedEvent}
+        onEventClick={handleOpenEvent}
         appConfig={appConfig}
       />
 
@@ -915,7 +1076,7 @@ const App: React.FC = () => {
       {selectedEvent && (
         <EventModal 
           event={selectedEvent} 
-          onClose={() => setSelectedEvent(null)} 
+          onClose={handleCloseEvent} 
           isInPlan={userPlans.some(p => p.eventIds.includes(selectedEvent.id))}
           onTogglePlan={handleAddToPlanClick}
         />
@@ -932,59 +1093,15 @@ const App: React.FC = () => {
       />
 
       {/* DONATION MODAL */}
-      {showDonationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden relative">
-            <button 
-              onClick={() => setShowDonationModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Heart className="w-8 h-8 text-pink-500 fill-current animate-pulse" />
-              </div>
-              
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">¡Gracias por tu apoyo!</h3>
-              <p className="text-gray-600 mb-6">
-                ¿Qué Plan? es un proyecto gratuito para la comunidad. Si te ha sido útil, considera hacernos una donación para mantener los servidores activos y seguir mejorando.
-              </p>
-
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <button className="flex items-center justify-center py-3 px-4 rounded-xl border border-pink-200 hover:bg-pink-50 text-pink-600 font-semibold transition-colors">
-                  <Coffee className="w-5 h-5 mr-2" />
-                  Café ($20)
-                </button>
-                <button className="flex items-center justify-center py-3 px-4 rounded-xl border border-pink-200 hover:bg-pink-50 text-pink-600 font-semibold transition-colors">
-                  <Coffee className="w-5 h-5 mr-2" />
-                  Comida ($100)
-                </button>
-              </div>
-              
-              <button 
-                onClick={() => {
-                  alert("¡Gracias por tu intención! Esta es una demo, no se realizará ningún cargo.");
-                  setShowDonationModal(false);
-                }}
-                className="w-full py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
-              >
-                Donar ahora
-              </button>
-              
-              <p className="mt-4 text-xs text-gray-400">
-                Pagos seguros procesados externamente.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      <DonationModal
+        isOpen={showDonationModal}
+        onClose={handleCloseDonationModal}
+      />
 
       {/* PROFILE MODAL */}
       <ProfileModal 
         isOpen={isProfileModalOpen} 
-        onClose={() => setIsProfileModalOpen(false)} 
+        onClose={handleCloseProfileModal} 
         currentUser={currentUser}
         onProfileUpdated={handleProfileUpdated}
       />
@@ -993,7 +1110,13 @@ const App: React.FC = () => {
       <AIAssistant events={events} />
 
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
+          <button 
+            onClick={handleOpenDonationModal}
+            className="mb-4 text-sm font-medium text-pink-500 hover:text-pink-600 flex items-center transition-colors"
+          >
+            <Heart className="w-4 h-4 mr-1 fill-current" /> Apoyar el proyecto
+          </button>
           <p className="text-base text-gray-400">
             &copy; {new Date().getFullYear()} Qué Plan. Todos los derechos reservados.
           </p>
