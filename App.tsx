@@ -347,10 +347,12 @@ const App: React.FC = () => {
     if (event.date < today) return false;
 
     // Category Filter
-    const matchesCategory = explorationCategories.length === 0 || explorationCategories.some(cat => 
-      cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === 
-      event.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    );
+    const matchesCategory = explorationCategories.length === 0 || explorationCategories.some(cat => {
+      const normalizedCat = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const normalizedEventCategories = event.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      // Check if the event's category string contains the selected category
+      return normalizedEventCategories.includes(normalizedCat);
+    });
     
     // Search Filter
     const normalizeText = (text: string) => text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -366,10 +368,11 @@ const App: React.FC = () => {
     if (event.date < today) return false;
 
     // Category Filter (Independent)
-    const matchesCategory = planCategories.length === 0 || planCategories.some(cat => 
-      cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === 
-      event.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    );
+    const matchesCategory = planCategories.length === 0 || planCategories.some(cat => {
+      const normalizedCat = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const normalizedEventCategories = event.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return normalizedEventCategories.includes(normalizedCat);
+    });
 
     // Date Filter
     let matchesDate = true;
@@ -960,7 +963,7 @@ const App: React.FC = () => {
             {/* Category Buttons (Multi-select) - EXPLORATION */}
             {sharedEventIds.length === 0 && (
               <section className="mb-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-2">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3 mb-2">
                 {categoryList.map((cat) => {
                   const isSelected = cat === EventCategory.ALL 
                     ? explorationCategories.length === 0 
@@ -970,14 +973,14 @@ const App: React.FC = () => {
                     <button
                       key={cat}
                       onClick={() => toggleExplorationCategory(cat)}
-                      className={`py-3 px-2 rounded-xl text-sm font-semibold transition-all shadow-sm border ${
+                      className={`py-2 px-2 md:py-3 md:px-2 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all shadow-sm border flex items-center justify-center text-center leading-tight ${
                         isSelected
-                          ? 'bg-indigo-600 text-white border-indigo-600 transform scale-105 shadow-md'
+                          ? 'bg-indigo-600 text-white border-indigo-600 transform md:scale-105 shadow-md'
                           : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-600'
                       }`}
                     >
-                      {isSelected && cat !== EventCategory.ALL && <Check className="w-3 h-3 inline mr-1" />}
-                      {cat}
+                      {isSelected && cat !== EventCategory.ALL && <Check className="w-3 h-3 inline mr-1 flex-shrink-0" />}
+                      <span>{cat}</span>
                     </button>
                   );
                 })}
@@ -1106,8 +1109,8 @@ const App: React.FC = () => {
         onProfileUpdated={handleProfileUpdated}
       />
 
-      {/* AI Assistant - Always available */}
-      <AIAssistant events={events} />
+      {/* AI Assistant - Always available (Temporarily hidden) */}
+      {/* <AIAssistant events={events} /> */}
 
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">

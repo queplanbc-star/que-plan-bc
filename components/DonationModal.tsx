@@ -179,7 +179,7 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
                 <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Heart className="w-8 h-8 text-indigo-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Apoya a Qué Plan Ensenada</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Apoya a Qué Plan</h2>
                 <p className="text-gray-600 text-sm">
                   Somos un proyecto local e independiente. Tu contribución nos ayuda a mantener la agenda cultural actualizada, pagar los servidores y seguir mejorando la plataforma.
                 </p>
@@ -260,7 +260,8 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
                   ) : (
                     <PayPalScriptProvider options={{ 
                       "clientId": (import.meta as any).env.VITE_PAYPAL_CLIENT_ID || "test",
-                      currency: "MXN"
+                      currency: "MXN",
+                      intent: "capture"
                     }}>
                       <PayPalButtons 
                         style={{ layout: "vertical", shape: "rect" }}

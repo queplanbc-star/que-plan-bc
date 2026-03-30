@@ -20,7 +20,8 @@ export enum EventCategory {
   DANCE = 'Danza',
   LITERATURE = 'Literatura',
   CINEMA = 'Cine',
-  WORKSHOPS = 'Talleres y Charlas'
+  TALKS = 'Charlas',
+  WORKSHOPS = 'Talleres'
 }
 
 export interface FilterState {
