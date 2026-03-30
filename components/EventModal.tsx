@@ -14,16 +14,32 @@ export const EventModal: React.FC<EventModalProps> = ({ event, onClose, isInPlan
 
   if (!event) return null;
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string, endDateStr?: string) => {
     if (!dateStr) return '';
-    const [year, month, day] = dateStr.split('-').map(Number);
-    if (!year || !month || !day) return dateStr;
+    
+    const parseDate = (dStr: string) => {
+      const [year, month, day] = dStr.split('-').map(Number);
+      if (!year || !month || !day) return null;
+      return new Date(year, month - 1, day);
+    };
 
-    const date = new Date(year, month - 1, day);
+    const startDate = parseDate(dateStr);
+    if (!startDate) return dateStr;
+
     const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
-    return `${days[date.getDay()]} ${day} de ${months[date.getMonth()]}`;
+    if (endDateStr) {
+      const endDate = parseDate(endDateStr);
+      if (endDate) {
+        if (startDate.getMonth() !== endDate.getMonth()) {
+          return `Del ${startDate.getDate()} de ${months[startDate.getMonth()]} al ${endDate.getDate()} de ${months[endDate.getMonth()]}`;
+        }
+        return `Del ${startDate.getDate()} al ${endDate.getDate()} de ${months[endDate.getMonth()]}`;
+      }
+    }
+
+    return `${days[startDate.getDay()]} ${startDate.getDate()} de ${months[startDate.getMonth()]}`;
   };
 
   return (
@@ -96,7 +112,7 @@ export const EventModal: React.FC<EventModalProps> = ({ event, onClose, isInPlan
               <Calendar className="w-5 h-5 text-indigo-600 mt-0.5" />
               <div>
                 <p className="font-semibold text-sm text-gray-500 uppercase tracking-wide">Fecha</p>
-                <p className="font-medium text-lg">{formatDate(event.date)}</p>
+                <p className="font-medium text-lg">{formatDate(event.date, event.endDate)}</p>
               </div>
             </div>
 

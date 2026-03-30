@@ -98,8 +98,8 @@ export const fetchAvatars = async (): Promise<string[]> => {
 export const fetchEvents = async (): Promise<CulturalEvent[]> => {
     // Se agrega headers=1 para intentar excluir la fila de encabezados de los datos devueltos
     // IMPORTANTE: El nombre de la hoja debe estar codificado (espacios -> %20)
-    // Added range A:I to include the 'costo' column
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&range=A:I&headers=1`;
+    // Added range A:J to include the new columns
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&range=A:J&headers=1`;
 
     try {
         const response = await fetch(url);
@@ -127,9 +127,9 @@ export const fetchEvents = async (): Promise<CulturalEvent[]> => {
             return [];
         }
 
-        // Mapeo de columnas:
-        // A(0): titulo, B(1): categoria, C(2): fecha, D(3): hora, 
-        // E(4): imagen, F(5): descripcion, G(6): lugar, H(7): link_mapa, I(8): costo
+        // Nuevo Mapeo de columnas:
+        // A(0): titulo, B(1): categoria, C(2): fecha_inicio, D(3): fecha_fin, 
+        // E(4): hora, F(5): costo, G(6): descripcion, H(7): lugar, I(8): link_mapa, J(9): imagen
         
         return rows.map((row: any, index: number) => {
             const c = row.c || [];
@@ -141,42 +141,51 @@ export const fetchEvents = async (): Promise<CulturalEvent[]> => {
                 return cell.v !== null && cell.v !== undefined ? String(cell.v) : "";
             };
 
-            // Procesamiento de Fecha (Columna C / Index 2)
-            let dateStr = "";
-            const rawDate = c[2]?.v;
-            // const formattedDate = c[2]?.f; // Unused
+            // Helper para procesar fechas
+            const parseDate = (cellIndex: number) => {
+                let dateStr = "";
+                const rawDate = c[cellIndex]?.v;
 
-            if (typeof rawDate === 'string' && rawDate.indexOf('Date') !== -1) {
-                // Parsear formato API: "Date(2024,0,15)" -> "2024-01-15"
-                const nums = rawDate.match(/\d+/g);
-                if (nums && nums.length >= 3) {
-                    const y = nums[0];
-                    const m = String(Number(nums[1]) + 1).padStart(2, '0'); // Meses 0-based
-                    const d = String(nums[2]).padStart(2, '0');
-                    dateStr = `${y}-${m}-${d}`;
+                if (typeof rawDate === 'string' && rawDate.indexOf('Date') !== -1) {
+                    // Parsear formato API: "Date(2024,0,15)" -> "2024-01-15"
+                    const nums = rawDate.match(/\d+/g);
+                    if (nums && nums.length >= 3) {
+                        const y = nums[0];
+                        const m = String(Number(nums[1]) + 1).padStart(2, '0'); // Meses 0-based
+                        const d = String(nums[2]).padStart(2, '0');
+                        dateStr = `${y}-${m}-${d}`;
+                    }
+                } else {
+                     // Si no es formato Date(...), tomamos el valor tal cual.
+                     dateStr = getVal(cellIndex);
                 }
-            } else {
-                 // Si no es formato Date(...), tomamos el valor tal cual.
-                 dateStr = getVal(2);
+                return dateStr;
             }
 
-            // Procesamiento de Hora (Columna D / Index 3)
-            const timeStr = c[3]?.f || getVal(3);
+            // Procesamiento de Fecha Inicio (Columna C / Index 2)
+            const dateStr = parseDate(2);
+            
+            // Procesamiento de Fecha Fin (Columna D / Index 3)
+            const endDateStr = parseDate(3);
 
-            // Imagen fallback si está vacía
-            const imgUrl = getVal(4) || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1000";
+            // Procesamiento de Hora (Columna E / Index 4)
+            const timeStr = c[4]?.f || getVal(4);
+
+            // Imagen fallback si está vacía (Columna J / Index 9)
+            const imgUrl = getVal(9) || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1000";
 
             return {
                 id: `sheet-${index}`,
                 title: getVal(0) || "Evento sin título",
                 category: (getVal(1) || "General").trim(),
                 date: dateStr, 
+                endDate: endDateStr || undefined,
                 time: timeStr,
+                cost: getVal(5),
+                description: getVal(6),
+                location: getVal(7),
+                mapsUrl: getVal(8),
                 imageUrl: imgUrl,
-                description: getVal(5),
-                location: getVal(6),
-                mapsUrl: getVal(7),
-                cost: getVal(8),
             };
         });
 

@@ -3,6 +3,7 @@ export interface CulturalEvent {
   title: string;
   category: string;
   date: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
   time: string; // HH:mm
   imageUrl: string;
   description?: string;
@@ -15,7 +16,7 @@ export interface CulturalEvent {
 export enum EventCategory {
   ALL = 'Todas',
   MUSIC = 'Música',
-  VISUAL_ARTS = 'Artes Visuales',
+  VISUAL_ARTS = 'Artes Plásticas',
   THEATER = 'Teatro',
   DANCE = 'Danza',
   LITERATURE = 'Literatura',

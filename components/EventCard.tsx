@@ -13,16 +13,32 @@ interface EventCardProps {
 export const EventCard: React.FC<EventCardProps> = ({ event, isInPlan, onTogglePlan, variant = 'default', onClick }) => {
   const isCompact = variant === 'compact';
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string, endDateStr?: string) => {
     if (!dateStr) return '';
-    const [year, month, day] = dateStr.split('-').map(Number);
-    if (!year || !month || !day) return dateStr;
+    
+    const parseDate = (dStr: string) => {
+      const [year, month, day] = dStr.split('-').map(Number);
+      if (!year || !month || !day) return null;
+      return new Date(year, month - 1, day);
+    };
 
-    const date = new Date(year, month - 1, day);
+    const startDate = parseDate(dateStr);
+    if (!startDate) return dateStr;
+
     const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
-    return `${days[date.getDay()]} ${day} de ${months[date.getMonth()]}`;
+    if (endDateStr) {
+      const endDate = parseDate(endDateStr);
+      if (endDate) {
+        if (startDate.getMonth() !== endDate.getMonth()) {
+          return `Del ${startDate.getDate()} de ${months[startDate.getMonth()]} al ${endDate.getDate()} de ${months[endDate.getMonth()]}`;
+        }
+        return `Del ${startDate.getDate()} al ${endDate.getDate()} de ${months[endDate.getMonth()]}`;
+      }
+    }
+
+    return `${days[startDate.getDay()]} ${startDate.getDate()} de ${months[startDate.getMonth()]}`;
   };
 
   return (
@@ -50,7 +66,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isInPlan, onToggleP
           <div className="space-y-0.5 sm:space-y-1">
             <div className="flex items-center text-gray-500 text-xs sm:text-sm">
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 text-indigo-500" />
-              <span className="truncate">{formatDate(event.date)}</span>
+              <span className="truncate">{formatDate(event.date, event.endDate)}</span>
             </div>
             <div className="flex items-center text-gray-500 text-xs sm:text-sm">
               <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 text-indigo-500" />

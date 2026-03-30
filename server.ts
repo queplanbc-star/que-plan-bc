@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import Stripe from "stripe";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -18,6 +19,51 @@ export function getStripe(): Stripe {
     stripeClient = new Stripe(key, { apiVersion: "2026-03-25.dahlia" as any });
   }
   return stripeClient;
+}
+
+// Fetch config from Google Sheets for server-side rendering of meta tags
+async function fetchServerConfig() {
+  const SHEET_ID = '179rvDzrKpJ1P94RCDOu6KyGgOf7kGw4BBQupYlFSCw0';
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Configuracion&range=A:B&headers=1`;
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    
+    const text = await response.text();
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}') + 1;
+    
+    if (start === -1 || end === -1) return null;
+
+    const json = JSON.parse(text.substring(start, end));
+    const rows = json.table?.rows || [];
+
+    let config = {
+      sharePhrase: "Descubre los mejores eventos culturales y de entretenimiento en Ensenada.",
+      previewImageUrl: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1000"
+    };
+
+    rows.forEach((row: any) => {
+      const key = row.c?.[0]?.v;
+      const value = row.c?.[1]?.v;
+      
+      if (typeof key === 'string') {
+        const normalizedKey = key.trim().toLowerCase();
+        if (normalizedKey === 'frase_compartir' && value) {
+          config.sharePhrase = String(value);
+        }
+        if (normalizedKey === 'url_imagen_preview' && value) {
+          config.previewImageUrl = String(value);
+        }
+      }
+    });
+    
+    return config;
+  } catch (error) {
+    console.error("Error loading server config:", error);
+    return null;
+  }
 }
 
 async function startServer() {
@@ -63,14 +109,59 @@ async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
-      appType: "spa",
+      appType: "custom", // Use custom to intercept HTML
     });
     app.use(vite.middlewares);
+    
+    app.get('*all', async (req, res, next) => {
+      try {
+        const url = req.originalUrl;
+        let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        
+        const config = await fetchServerConfig();
+        if (config) {
+          template = template.replace(
+            /<meta property="og:image" content="[^"]*">/,
+            `<meta property="og:image" content="${config.previewImageUrl}">`
+          );
+          template = template.replace(
+            /<meta property="og:description" content="[^"]*">/,
+            `<meta property="og:description" content="${config.sharePhrase}">`
+          );
+        }
+        
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e) {
+        vite.ssrFixStacktrace(e as Error);
+        next(e);
+      }
+    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*all', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.use(express.static(distPath, { index: false })); // Disable default index.html serving
+    
+    app.get('*all', async (req, res) => {
+      try {
+        let template = fs.readFileSync(path.join(distPath, 'index.html'), 'utf-8');
+        const config = await fetchServerConfig();
+        
+        if (config) {
+          template = template.replace(
+            /<meta property="og:image" content="[^"]*">/,
+            `<meta property="og:image" content="${config.previewImageUrl}">`
+          );
+          template = template.replace(
+            /<meta property="og:description" content="[^"]*">/,
+            `<meta property="og:description" content="${config.sharePhrase}">`
+          );
+        }
+        
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e) {
+        console.error(e);
+        res.status(500).end('Internal Server Error');
+      }
     });
   }
 

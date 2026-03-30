@@ -303,8 +303,10 @@ const App: React.FC = () => {
         const ogImage = document.querySelector('meta[property="og:image"]');
         if (ogImage) ogImage.setAttribute('content', config.previewImageUrl);
       }
-      // Note: og:title and og:description are usually static or set server-side, 
-      // but we can try to update them for client-side previews if supported.
+      if (config.sharePhrase) {
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc) ogDesc.setAttribute('content', config.sharePhrase);
+      }
     };
     loadConfig();
 
@@ -344,14 +346,14 @@ const App: React.FC = () => {
 
     // Filter Past Events
     const today = getLocalToday();
-    if (event.date < today) return false;
+    const eventEndDate = event.endDate || event.date;
+    if (eventEndDate < today) return false;
 
     // Category Filter
     const matchesCategory = explorationCategories.length === 0 || explorationCategories.some(cat => {
-      const normalizedCat = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const normalizedEventCategories = event.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      // Check if the event's category string contains the selected category
-      return normalizedEventCategories.includes(normalizedCat);
+      const normalizedCat = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const eventCategories = event.category.split(',').map(c => c.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+      return eventCategories.includes(normalizedCat);
     });
     
     // Search Filter
@@ -365,23 +367,24 @@ const App: React.FC = () => {
   const planEvents = events.filter(event => {
     // Filter Past Events
     const today = getLocalToday();
-    if (event.date < today) return false;
+    const eventEndDate = event.endDate || event.date;
+    if (eventEndDate < today) return false;
 
     // Category Filter (Independent)
     const matchesCategory = planCategories.length === 0 || planCategories.some(cat => {
-      const normalizedCat = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const normalizedEventCategories = event.category.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      return normalizedEventCategories.includes(normalizedCat);
+      const normalizedCat = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const eventCategories = event.category.split(',').map(c => c.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+      return eventCategories.includes(normalizedCat);
     });
 
     // Date Filter
     let matchesDate = true;
     if (dateFilterStart && !dateFilterEnd) {
-      // Exact match if only start date is provided
-      matchesDate = event.date === dateFilterStart;
+      // Exact match if only start date is provided, or if start date falls within event range
+      matchesDate = event.date <= dateFilterStart && eventEndDate >= dateFilterStart;
     } else if (dateFilterStart && dateFilterEnd) {
-      // Range match if both are provided
-      matchesDate = event.date >= dateFilterStart && event.date <= dateFilterEnd;
+      // Range match if both are provided (overlap logic)
+      matchesDate = event.date <= dateFilterEnd && eventEndDate >= dateFilterStart;
     } else if (!dateFilterStart && dateFilterEnd) {
       // Up to end date
       matchesDate = event.date <= dateFilterEnd;
@@ -435,7 +438,11 @@ const App: React.FC = () => {
   };
 
   const todayEvents = events
-    .filter(e => e.date === getLocalToday())
+    .filter(e => {
+      const today = getLocalToday();
+      const endDate = e.endDate || e.date;
+      return e.date <= today && endDate >= today;
+    })
     .sort((a, b) => a.time.localeCompare(b.time));
 
   const scrollToday = (direction: 'left' | 'right') => {
