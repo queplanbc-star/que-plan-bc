@@ -109,59 +109,14 @@ async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
-      appType: "custom", // Use custom to intercept HTML
+      appType: "spa",
     });
     app.use(vite.middlewares);
-    
-    app.get('*all', async (req, res, next) => {
-      try {
-        const url = req.originalUrl;
-        let template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
-        template = await vite.transformIndexHtml(url, template);
-        
-        const config = await fetchServerConfig();
-        if (config) {
-          template = template.replace(
-            /<meta property="og:image" content="[^"]*">/,
-            `<meta property="og:image" content="${config.previewImageUrl}">`
-          );
-          template = template.replace(
-            /<meta property="og:description" content="[^"]*">/,
-            `<meta property="og:description" content="${config.sharePhrase}">`
-          );
-        }
-        
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
-      } catch (e) {
-        vite.ssrFixStacktrace(e as Error);
-        next(e);
-      }
-    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath, { index: false })); // Disable default index.html serving
-    
-    app.get('*all', async (req, res) => {
-      try {
-        let template = fs.readFileSync(path.join(distPath, 'index.html'), 'utf-8');
-        const config = await fetchServerConfig();
-        
-        if (config) {
-          template = template.replace(
-            /<meta property="og:image" content="[^"]*">/,
-            `<meta property="og:image" content="${config.previewImageUrl}">`
-          );
-          template = template.replace(
-            /<meta property="og:description" content="[^"]*">/,
-            `<meta property="og:description" content="${config.sharePhrase}">`
-          );
-        }
-        
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
-      } catch (e) {
-        console.error(e);
-        res.status(500).end('Internal Server Error');
-      }
+    app.use(express.static(distPath));
+    app.get('*all', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 

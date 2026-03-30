@@ -297,16 +297,6 @@ const App: React.FC = () => {
     const loadConfig = async () => {
       const config = await fetchConfig();
       setAppConfig(config);
-      
-      // Update Meta Tags if config exists
-      if (config.previewImageUrl) {
-        const ogImage = document.querySelector('meta[property="og:image"]');
-        if (ogImage) ogImage.setAttribute('content', config.previewImageUrl);
-      }
-      if (config.sharePhrase) {
-        const ogDesc = document.querySelector('meta[property="og:description"]');
-        if (ogDesc) ogDesc.setAttribute('content', config.sharePhrase);
-      }
     };
     loadConfig();
 
