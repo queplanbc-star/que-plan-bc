@@ -990,7 +990,7 @@ const App: React.FC = () => {
                 <div className={`flex ${sharedEventIds.length > 0 ? 'flex-col sm:flex-row sm:items-center justify-between gap-4 text-center sm:text-left' : 'items-center justify-between'}`}>
                   <h3 className={`${sharedEventIds.length > 0 ? 'text-2xl sm:text-3xl text-indigo-600' : 'text-xl text-gray-800'} font-bold`}>
                     {sharedEventIds.length > 0 
-                      ? '¡Mira el plan que armaron para ti! ✨' 
+                      ? '¡Mira el plan que armé! ¿Vamos?' 
                       : (explorationEvents.length === 0 ? 'Sin resultados' : 'Exploración de Eventos')}
                   </h3>
                   
