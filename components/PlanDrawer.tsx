@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Calendar, ChevronRight, ArrowLeft, MessageCircle, Edit2, Check } from 'lucide-react';
+import { X, Plus, Trash2, Calendar, ChevronRight, ArrowLeft, MessageCircle, Edit2, Check, Star } from 'lucide-react';
 import { UserPlan, createPlan, removeEventFromPlan, deletePlan, updatePlanName } from '../services/firebase';
 import { CulturalEvent } from '../types';
 import { AppConfig } from '../services/dataService';
@@ -180,16 +180,21 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
             <div className="space-y-4">
               <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-4 flex justify-between items-start">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{selectedPlan.name}</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    {selectedPlan.name === 'Mis Favoritos' && <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
+                    {selectedPlan.name}
+                  </h3>
                   <p className="text-gray-500 text-sm">{selectedPlan.eventIds.length} eventos</p>
                 </div>
-                <button
-                  onClick={() => handleDeletePlan(selectedPlan.id)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-gray-50 hover:bg-red-50 rounded-lg"
-                  title="Eliminar plan completo"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+                {selectedPlan.name !== 'Mis Favoritos' && (
+                  <button
+                    onClick={() => handleDeletePlan(selectedPlan.id)}
+                    className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-gray-50 hover:bg-red-50 rounded-lg"
+                    title="Eliminar plan completo"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
               </div>
 
               {/* Share Button */}
@@ -294,10 +299,14 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
                           setSelectedPlan(plan);
                         }
                       }}
-                      className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-indigo-100 transition-all cursor-pointer group flex items-center justify-between"
+                      className={`bg-white p-4 rounded-xl shadow-sm border transition-all cursor-pointer group flex items-center justify-between ${
+                        plan.name === 'Mis Favoritos' 
+                          ? 'border-indigo-300 bg-indigo-50/30 hover:shadow-md hover:border-indigo-400' 
+                          : 'border-gray-100 hover:shadow-md hover:border-indigo-100'
+                      }`}
                     >
                       <div className="flex-1 min-w-0 mr-4">
-                        {editingPlanId === plan.id ? (
+                        {editingPlanId === plan.id && plan.name !== 'Mis Favoritos' ? (
                           <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                             <input
                               type="text"
@@ -326,29 +335,34 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
+                            {plan.name === 'Mis Favoritos' && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />}
                             <h3 className="font-bold text-gray-800 group-hover:text-indigo-700 transition-colors truncate">{plan.name}</h3>
-                            <button
-                              onClick={(e) => handleEditPlanName(e, plan)}
-                              className="p-1 text-gray-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-indigo-50"
-                              title="Renombrar plan"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
+                            {plan.name !== 'Mis Favoritos' && (
+                              <button
+                                onClick={(e) => handleEditPlanName(e, plan)}
+                                className="p-1 text-gray-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-indigo-50"
+                                title="Renombrar plan"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         )}
                         <p className="text-xs text-gray-500 mt-1">{plan.eventIds.length} eventos</p>
                       </div>
                       <div className="flex items-center flex-shrink-0">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeletePlan(plan.id);
-                          }}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors mr-1"
-                          title="Eliminar plan"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {plan.name !== 'Mis Favoritos' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePlan(plan.id);
+                            }}
+                            className="p-2 text-gray-400 hover:text-red-500 transition-colors mr-1"
+                            title="Eliminar plan"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                         <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-indigo-400" />
                       </div>
                     </div>

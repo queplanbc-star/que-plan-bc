@@ -10,7 +10,7 @@ export const ContactSection: React.FC<{ id?: string }> = ({ id }) => {
             ¿Tienes o conoces un evento?
           </h2>
           <p className="text-sm md:text-lg text-indigo-600 font-medium">
-            Agrégalo a Qué Plan y llega a más personas.
+            Agrégalo a Qué Plan y llega a más personas
           </p>
         </div>
 
@@ -52,7 +52,7 @@ export const ContactSection: React.FC<{ id?: string }> = ({ id }) => {
           <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-6">
             <div className="space-y-1 md:space-y-2">
               <label htmlFor="location" className="block text-xs md:text-sm font-medium text-gray-700">
-                Lugar / Recinto
+                Lugar del Evento
               </label>
               <input
                 type="text"
@@ -60,13 +60,13 @@ export const ContactSection: React.FC<{ id?: string }> = ({ id }) => {
                 name="location"
                 required
                 className="w-full px-2 py-1.5 md:px-4 md:py-3 text-sm rounded-lg md:rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none bg-gray-50 focus:bg-white"
-                placeholder="Ej. Teatro"
+                placeholder="Ej. Teatro de la Ciudad"
               />
             </div>
 
             <div className="space-y-1 md:space-y-2">
               <label htmlFor="posterLink" className="block text-xs md:text-sm font-medium text-gray-700">
-                Link del Póster
+                Link del Póster <span className="text-gray-400 text-[10px] md:text-xs font-normal ml-1">(Debe ser de Google Drive)</span>
               </label>
               <input
                 type="url"
@@ -74,7 +74,7 @@ export const ContactSection: React.FC<{ id?: string }> = ({ id }) => {
                 name="posterLink"
                 required
                 className="w-full px-2 py-1.5 md:px-4 md:py-3 text-sm rounded-lg md:rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none bg-gray-50 focus:bg-white"
-                placeholder="https://..."
+                placeholder="Link de Google Drive (Ej. drive.google.com/...)"
               />
             </div>
           </div>
@@ -102,7 +102,7 @@ export const ContactSection: React.FC<{ id?: string }> = ({ id }) => {
               name="message"
               rows={3}
               className="w-full px-2 py-1.5 md:px-4 md:py-3 text-sm rounded-lg md:rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none bg-gray-50 focus:bg-white resize-none"
-              placeholder="Detalles adicionales..."
+              placeholder="Descripción del evento"
             ></textarea>
           </div>
 

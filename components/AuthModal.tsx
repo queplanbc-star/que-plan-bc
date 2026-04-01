@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, Loader2 } from 'lucide-react';
+import { X, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { loginWithEmail, registerWithEmail } from '../services/firebase';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -11,10 +12,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   if (!isOpen) return null;
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      alert('Por favor, ingresa tu correo electrónico para enviarte el enlace de recuperación');
+      return;
+    }
+    
+    setIsResettingPassword(true);
+    setSuccessMessage('');
+    setError('');
+    
+    try {
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
+      setSuccessMessage('Instrucciones enviadas. Revisa tu correo (y el Spam).');
+      alert('¡Correo enviado! Revisa tu bandeja de entrada. NOTA: El correo puede llegar a la carpeta de SPAM.');
+      setIsResettingPassword(false);
+    } catch (err: any) {
+      console.error(err);
+      alert('No pudimos enviar el correo. Asegúrate de que la dirección sea correcta o intenta más tarde.');
+      setIsResettingPassword(false);
+    }
+  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +90,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               {mode === 'login' ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
             </h2>
             <p className="text-gray-500 mt-2 text-sm">
-              {mode === 'login' ? 'Ingresa para guardar tus planes' : 'Regístrate para personalizar tu experiencia'}
+              {mode === 'login' ? 'Ingresa para armar, guardar y compartir tu Plan' : 'Regístrate para armar, guardar y compartir tu Plan'}
             </p>
           </div>
 
@@ -82,6 +109,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   placeholder="tu@email.com"
                 />
               </div>
+              {successMessage && (
+                <p className="mt-2 text-sm text-green-600 font-medium">
+                  {successMessage}
+                </p>
+              )}
             </div>
             
             <div>
@@ -89,14 +121,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                  className="pl-10 pr-10 w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
+              {mode === 'login' && (
+                <div className="flex justify-end mt-1">
+                  <button
+                    type="button"
+                    onClick={handleResetPassword}
+                    disabled={isResettingPassword || !!successMessage}
+                    className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isResettingPassword ? 'Enviando enlace...' : (successMessage ? 'Enlace enviado' : '¿Olvidaste tu contraseña?')}
+                  </button>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -118,7 +169,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <p className="text-sm text-gray-600">
               {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
               <button 
-                onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
+                onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setSuccessMessage(''); }}
                 className="ml-1 text-indigo-600 font-semibold hover:underline"
               >
                 {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}

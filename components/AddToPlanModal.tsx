@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Loader2 } from 'lucide-react';
+import { X, Plus, Loader2, Star } from 'lucide-react';
 import { UserPlan, createPlan, addEventToPlan, removeEventFromPlan } from '../services/firebase';
 import { CulturalEvent } from '../types';
 
@@ -87,7 +87,7 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
 
         <div className="p-4 max-h-[60vh] overflow-y-auto">
           <p className="text-sm text-gray-500 mb-4">
-            Selecciona las listas donde quieres guardar <span className="font-medium text-gray-900">"{event.title}"</span>
+            Selecciona los planes donde quieres guardar <span className="font-medium text-gray-900">"{event.title}"</span>
           </p>
 
           <div className="space-y-2">
@@ -100,17 +100,22 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
                   disabled={!!loadingPlanId}
                   className={`w-full p-3 rounded-xl flex items-center justify-between transition-all group ${
                     isAlreadyIn 
-                      ? 'bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600' 
-                      : 'bg-gray-50 hover:bg-indigo-50 hover:text-indigo-700 text-gray-700'
+                      ? 'bg-green-50 text-green-700 md:hover:bg-red-50 md:hover:text-red-600' 
+                      : plan.name === 'Mis Favoritos'
+                        ? 'bg-yellow-50 hover:bg-yellow-100 text-gray-800 border border-yellow-200'
+                        : 'bg-gray-50 hover:bg-indigo-50 hover:text-indigo-700 text-gray-700'
                   }`}
                 >
-                  <span className="font-medium">{plan.name}</span>
+                  <span className="font-medium flex items-center gap-1.5">
+                    {plan.name === 'Mis Favoritos' && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
+                    {plan.name}
+                  </span>
                   {loadingPlanId === plan.id ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : isAlreadyIn ? (
-                    <span className="text-xs font-bold px-2 py-1 bg-green-100 rounded-full group-hover:bg-red-100 group-hover:text-red-600 transition-colors">
-                      <span className="group-hover:hidden">Guardado</span>
-                      <span className="hidden group-hover:inline">Eliminar</span>
+                    <span className="text-xs font-bold px-2 py-1 bg-green-100 rounded-full md:group-hover:bg-red-100 md:group-hover:text-red-600 transition-colors">
+                      <span className="md:group-hover:hidden">Guardado</span>
+                      <span className="hidden md:group-hover:inline">Eliminar</span>
                     </span>
                   ) : (
                     <span className="text-xs text-gray-400">{plan.eventIds.length} eventos</span>
@@ -127,7 +132,7 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
               className="w-full mt-4 py-3 border border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-500 hover:border-indigo-300 hover:text-indigo-600 transition-all"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Crear nueva lista
+              Crear nuevo plan
             </button>
           ) : (
             <form onSubmit={handleCreatePlan} className="mt-4 bg-gray-50 p-3 rounded-xl">
@@ -136,7 +141,7 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
                 autoFocus
                 value={newPlanName}
                 onChange={(e) => setNewPlanName(e.target.value)}
-                placeholder="Nombre de la lista..."
+                placeholder="Nombre del plan..."
                 className="w-full p-2 border border-gray-200 rounded-lg mb-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
               />
               <div className="flex justify-end space-x-2">

@@ -541,24 +541,6 @@ const App: React.FC = () => {
                 Inicio
               </button>
 
-              {/* Admin Button - Only visible if ?admin=true in URL */}
-              {isAdminMode && (
-                <button 
-                  onClick={() => setViewMode('admin')}
-                  className={`text-sm font-medium hover:text-indigo-600 flex items-center ${viewMode === 'admin' ? 'text-indigo-600' : 'text-gray-500'}`}
-                >
-                  <Database className="w-4 h-4 mr-1" /> BD
-                </button>
-              )}
-
-              {/* Donation Button */}
-              <button 
-                onClick={handleOpenDonationModal}
-                className="text-sm font-medium text-pink-500 hover:text-pink-600 flex items-center bg-pink-50 px-3 py-1.5 rounded-full transition-colors"
-              >
-                <Heart className="w-4 h-4 mr-1 fill-current" /> Apoyar
-              </button>
-
               <button 
                 onClick={() => {
                   setViewMode('home');
@@ -574,26 +556,38 @@ const App: React.FC = () => {
                 Contacto
               </button>
 
-              {/* Open in New Window Button (Fix for iframe auth issues) */}
-              <button 
-                onClick={() => window.open(window.location.href, '_blank')}
-                className="text-sm font-medium text-gray-500 hover:text-indigo-600 flex items-center px-3 py-1.5 rounded-full transition-colors"
-                title="Abrir en ventana nueva (Soluciona problemas de login)"
-              >
-                <ExternalLink className="w-4 h-4 mr-1" /> Abrir
-              </button>
-
               <button 
                 onClick={handleOpenPlanDrawer}
-                className="relative p-2 rounded-full bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                className="flex items-center space-x-2 group"
               >
-                <ShoppingBag className="h-6 w-6 text-indigo-600" />
-                {userPlans.reduce((acc, plan) => acc + plan.eventIds.length, 0) > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-bounce">
-                    {userPlans.reduce((acc, plan) => acc + plan.eventIds.length, 0)}
-                  </span>
-                )}
+                <div className="relative p-2 rounded-full bg-indigo-50 group-hover:bg-indigo-100 transition-colors">
+                  <ShoppingBag className="h-6 w-6 text-indigo-600" />
+                  {userPlans.reduce((acc, plan) => acc + plan.eventIds.length, 0) > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-bounce">
+                      {userPlans.reduce((acc, plan) => acc + plan.eventIds.length, 0)}
+                    </span>
+                  )}
+                </div>
+                <span className="text-sm font-medium text-gray-500 group-hover:text-indigo-600 transition-colors">Mis Planes</span>
               </button>
+
+              {/* Donation Button */}
+              <button 
+                onClick={handleOpenDonationModal}
+                className="text-sm font-medium text-pink-500 hover:text-pink-600 flex items-center bg-pink-50 px-3 py-1.5 rounded-full transition-colors"
+              >
+                <Heart className="w-4 h-4 mr-1 fill-current" /> Apoyar
+              </button>
+
+              {/* Admin Button - Only visible if ?admin=true in URL */}
+              {isAdminMode && (
+                <button 
+                  onClick={() => setViewMode('admin')}
+                  className={`text-sm font-medium hover:text-indigo-600 flex items-center ${viewMode === 'admin' ? 'text-indigo-600' : 'text-gray-500'}`}
+                >
+                  <Database className="w-4 h-4 mr-1" /> BD
+                </button>
+              )}
 
               {/* User Profile / Login */}
               {currentUser ? (
@@ -663,6 +657,18 @@ const App: React.FC = () => {
               />
               <div className="flex flex-col space-y-2">
                 <button onClick={handleGoHome} className="text-left font-medium text-gray-700 py-2">Inicio</button>
+                <button onClick={() => {
+                  setViewMode('home');
+                  setTimeout(() => {
+                    const contactSection = document.getElementById('contact-section');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }, 100);
+                  setIsMobileMenuOpen(false);
+                }} className="text-left font-medium text-gray-700 py-2">
+                  Contacto
+                </button>
                 <button onClick={() => { 
                   if (window.history.state?.view === 'mobile_menu') {
                     window.history.replaceState({ view: 'plan_drawer' }, '');
@@ -672,12 +678,12 @@ const App: React.FC = () => {
                   setIsMobileMenuOpen(false);
                   setIsPlanDrawerOpen(true);
                 }} className="text-left font-medium text-gray-700 py-2">
-                  Mi Plan ({userPlans.reduce((acc, plan) => acc + plan.eventIds.length, 0)})
+                  Mis Planes ({userPlans.reduce((acc, plan) => acc + plan.eventIds.length, 0)})
                 </button>
+                <button onClick={handleOpenDonationModal} className="text-left font-medium text-pink-600 py-2 flex items-center"><Heart className="w-4 h-4 mr-2" /> Apoyar el proyecto</button>
                 {isAdminMode && (
                   <button onClick={() => { setViewMode('admin'); handleCloseMobileMenu(); }} className="text-left font-medium text-gray-700 py-2">Base de Datos</button>
                 )}
-                <button onClick={handleOpenDonationModal} className="text-left font-medium text-pink-600 py-2 flex items-center"><Heart className="w-4 h-4 mr-2" /> Apoyar el proyecto</button>
                 
                 <div className="pt-4 border-t border-gray-100 mt-2">
                   {currentUser ? (
@@ -739,10 +745,10 @@ const App: React.FC = () => {
             {/* Header / Hero */}
             <div className="text-center mb-6 sm:mb-8">
               <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-900 mb-2 tracking-tight">
-                ¿Qué <span className="text-indigo-600">Plan?</span>
+                Qué <span className="text-indigo-600">Plan</span>
               </h1>
-              <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto leading-relaxed">
-                La cartelera cultural definitiva de tu ciudad. Encuentra música, arte, teatro y más.
+              <p className="text-[14px] md:text-[16px] text-gray-600 mx-auto max-w-[95%] md:max-w-[600px] leading-relaxed">
+                Selecciona eventos de la cartelera y arma tu recorrido personalizado. Guarda y Comparte tu Plan para disfrutarlo con quien tú quieras.
               </p>
             </div>
 
@@ -797,8 +803,8 @@ const App: React.FC = () => {
             {sharedEventIds.length === 0 && (
               <section id="arma-tu-plan" className="mb-8 sm:mb-12">
                 <div className="bg-gray-100 sm:bg-gray-200 rounded-lg p-3 sm:p-6 shadow-sm border border-gray-200 sm:border-gray-300">
-                <h2 className="text-lg sm:text-2xl font-bold text-gray-800 text-center mb-3 sm:mb-6">Arma tu plan!</h2>
-                <p className="text-center text-gray-600 mb-4 sm:mb-6 -mt-2 sm:-mt-4 text-xs sm:text-sm">Filtra por fecha, hora y categoría.</p>
+                <h2 className="text-lg sm:text-2xl font-bold text-gray-800 text-center mb-3 sm:mb-6">¡Arma tu Plan!</h2>
+                <p className="text-center text-gray-600 mb-4 sm:mb-6 -mt-2 sm:-mt-4 text-xs sm:text-sm">Filtra por fecha, hora o categoría</p>
                 
                 <div className="flex flex-col md:flex-row items-center justify-center gap-3 sm:gap-6 md:gap-8">
                   

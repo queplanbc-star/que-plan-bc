@@ -181,7 +181,7 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Apoya a Qué Plan</h2>
                 <p className="text-gray-600 text-sm">
-                  Somos un proyecto local e independiente. Tu contribución nos ayuda a mantener la agenda cultural actualizada, pagar los servidores y seguir mejorando la plataforma.
+                  Somos un proyecto local e independiente con sede en Ensenada, Baja California. Tu donativo nos ayuda a mantener la cartelera actualizada y a seguir mejorando la plataforma.
                 </p>
               </div>
 

@@ -144,7 +144,20 @@ export const getUserPlans = async (userId: string): Promise<UserPlan[]> => {
     const plansRef = collection(db, "users_plans", userId, "plans");
     const q = query(plansRef, orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserPlan));
+    
+    if (snapshot.empty) {
+      const defaultPlan = await createPlan(userId, "Mis Favoritos");
+      return [defaultPlan as UserPlan];
+    }
+    
+    const plans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserPlan));
+    
+    // Sort to ensure "Mis Favoritos" is always first
+    return plans.sort((a, b) => {
+      if (a.name === 'Mis Favoritos') return -1;
+      if (b.name === 'Mis Favoritos') return 1;
+      return 0;
+    });
   } catch (error) {
     console.error("Error fetching plans:", error);
     return [];
