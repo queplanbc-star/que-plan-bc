@@ -74,7 +74,7 @@ export const ContactSection: React.FC<{ id?: string }> = ({ id }) => {
                 name="posterLink"
                 required
                 className="w-full px-2 py-1.5 md:px-4 md:py-3 text-sm rounded-lg md:rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none bg-gray-50 focus:bg-white"
-                placeholder="Link de Google Drive (Ej. drive.google.com/...)"
+                placeholder="Link de Google Drive"
               />
             </div>
           </div>
@@ -95,7 +95,7 @@ export const ContactSection: React.FC<{ id?: string }> = ({ id }) => {
 
           <div className="space-y-1 md:space-y-2">
             <label htmlFor="message" className="block text-xs md:text-sm font-medium text-gray-700">
-              Mensaje (opcional)
+              Mensaje
             </label>
             <textarea
               id="message"

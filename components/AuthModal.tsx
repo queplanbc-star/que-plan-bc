@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { loginWithEmail, registerWithEmail } from '../services/firebase';
-import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
+import { sendCustomPasswordResetEmail } from '../services/resendService';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -31,10 +31,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setError('');
     
     try {
-      const auth = getAuth();
-      await sendPasswordResetEmail(auth, email);
-      setSuccessMessage('Instrucciones enviadas. Revisa tu correo (y el Spam).');
-      alert('¡Correo enviado! Revisa tu bandeja de entrada. NOTA: El correo puede llegar a la carpeta de SPAM.');
+      // Usamos un enlace de recuperación simulado o la URL base por ahora
+      const resetLink = `${window.location.origin}/reset-password`;
+      await sendCustomPasswordResetEmail(email, resetLink);
+      
+      const successText = "¡Listo! Te enviamos un correo personalizado de Qué Plan. Si no lo ves, revisa tu carpeta de Spam.";
+      setSuccessMessage(successText);
+      alert(successText);
       setIsResettingPassword(false);
     } catch (err: any) {
       console.error(err);
@@ -144,7 +147,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     disabled={isResettingPassword || !!successMessage}
                     className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isResettingPassword ? 'Enviando enlace...' : (successMessage ? 'Enlace enviado' : '¿Olvidaste tu contraseña?')}
+                    {isResettingPassword ? 'Enviando instrucciones...' : (successMessage ? 'Enlace enviado' : '¿Olvidaste tu contraseña?')}
                   </button>
                 </div>
               )}

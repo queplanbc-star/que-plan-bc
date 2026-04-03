@@ -55,7 +55,7 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
   };
 
   const handleDeletePlan = async (planId: string) => {
-    if (!currentUser || !window.confirm('¿Estás seguro de que deseas eliminar este plan?')) return;
+    if (!currentUser || !window.confirm('¿Estás seguro de que deseas eliminar este Plan?')) return;
     try {
       await deletePlan(currentUser.uid, planId);
       onPlanCreated(); // Refresh list
@@ -89,7 +89,7 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
     
     const ids = selectedPlan.eventIds.join(',');
     const shareUrl = `${window.location.origin}${window.location.pathname}?ids=${ids}`;
-    const phrase = appConfig?.sharePhrase || "¡Mira este plan que armé en Qué Plan!";
+    const phrase = appConfig?.sharePhrase || "¡Mira este Plan que armé en Qué Plan!";
     const planName = selectedPlan.name;
     
     // Exact requested structure:
@@ -173,7 +173,7 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
               <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
                 <Calendar className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-600 mb-4">Inicia sesión para crear y guardar tus planes.</p>
+              <p className="text-gray-600 mb-4">Inicia sesión para armar, guardar y compartir tus Planes.</p>
             </div>
           ) : selectedPlan ? (
             // Single Plan View
@@ -190,7 +190,7 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
                   <button
                     onClick={() => handleDeletePlan(selectedPlan.id)}
                     className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-gray-50 hover:bg-red-50 rounded-lg"
-                    title="Eliminar plan completo"
+                    title="Eliminar Plan completo"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -210,7 +210,7 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
 
               {selectedPlan.eventIds.length === 0 ? (
                 <div className="text-center py-12">
-                   <p className="text-gray-500">Este plan está vacío.</p>
+                   <p className="text-gray-500">Este Plan está vacío.</p>
                    <p className="text-sm text-gray-400 mt-1">¡Añade eventos desde la cartelera!</p>
                 </div>
               ) : (
@@ -252,11 +252,11 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
                   className="w-full py-4 border-2 border-dashed border-indigo-200 rounded-xl flex items-center justify-center text-indigo-600 font-medium hover:bg-indigo-50 hover:border-indigo-300 transition-all"
                 >
                   <Plus className="w-5 h-5 mr-2" />
-                  Crear nuevo plan
+                  Crear nuevo Plan
                 </button>
               ) : (
                 <form onSubmit={handleCreatePlan} className="bg-white p-4 rounded-xl shadow-sm border border-indigo-100 animate-fade-in">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Nombre del plan</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nombre del Plan</label>
                   <input 
                     type="text" 
                     autoFocus
@@ -288,7 +288,7 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
               <div className="space-y-3 mt-6">
                 {userPlans.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    <p>Aún no tienes planes armados.</p>
+                    <p>Aún no tienes Planes armados.</p>
                   </div>
                 ) : (
                   userPlans.map(plan => (
@@ -341,7 +341,7 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
                               <button
                                 onClick={(e) => handleEditPlanName(e, plan)}
                                 className="p-1 text-gray-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-indigo-50"
-                                title="Renombrar plan"
+                                title="Renombrar Plan"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
@@ -358,7 +358,7 @@ export const PlanDrawer: React.FC<PlanDrawerProps> = ({
                               handleDeletePlan(plan.id);
                             }}
                             className="p-2 text-gray-400 hover:text-red-500 transition-colors mr-1"
-                            title="Eliminar plan"
+                            title="Eliminar Plan"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

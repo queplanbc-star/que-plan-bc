@@ -748,7 +748,7 @@ const App: React.FC = () => {
                 Qué <span className="text-indigo-600">Plan</span>
               </h1>
               <p className="text-[14px] md:text-[16px] text-gray-600 mx-auto max-w-[95%] md:max-w-[600px] leading-relaxed">
-                Selecciona eventos de la cartelera y arma tu recorrido personalizado. Guarda y Comparte tu Plan para disfrutarlo con quien tú quieras.
+                Selecciona eventos de la cartelera y arma tu recorrido personalizado. Guarda y Comparte tu Plan para disfrutarlo con quien tú quieras
               </p>
             </div>
 
@@ -925,7 +925,7 @@ const App: React.FC = () => {
               <section id="plan-results" className="animate-fade-in space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-gray-800">
-                      {planEvents.length === 0 ? 'Sin resultados para tu plan' : 'Resultados de tu Plan'}
+                      {planEvents.length === 0 ? 'Sin resultados para tu Plan' : 'Resultados de tu Plan'}
                     </h3>
                     <button 
                       onClick={() => { 
@@ -937,14 +937,14 @@ const App: React.FC = () => {
                       }}
                       className="text-sm text-indigo-600 hover:text-indigo-800 font-medium underline"
                     >
-                      Limpiar filtros de plan
+                      Limpiar filtros de Plan
                     </button>
                   </div>
 
                   {planEvents.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-dashed border-gray-300">
                       <LayoutGrid className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">No hay eventos para tu plan</h3>
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No hay eventos para tu Plan</h3>
                       <p className="mt-1 text-sm text-gray-500">Intenta ampliar tu rango de fechas, horario o categorías.</p>
                     </div>
                   ) : (
@@ -966,7 +966,7 @@ const App: React.FC = () => {
             {/* Category Buttons (Multi-select) - EXPLORATION */}
             {sharedEventIds.length === 0 && (
               <section className="mb-6">
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3 mb-2">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap lg:justify-center gap-2 md:gap-3 mb-2">
                 {categoryList.map((cat) => {
                   const isSelected = cat === EventCategory.ALL 
                     ? explorationCategories.length === 0 
@@ -976,7 +976,7 @@ const App: React.FC = () => {
                     <button
                       key={cat}
                       onClick={() => toggleExplorationCategory(cat)}
-                      className={`py-2 px-2 md:py-3 md:px-2 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all shadow-sm border flex items-center justify-center text-center leading-tight ${
+                      className={`w-full lg:w-[calc((100%-4.5rem)/7)] py-2 px-2 md:py-3 md:px-2 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all shadow-sm border flex items-center justify-center text-center leading-tight ${
                         isSelected
                           ? 'bg-indigo-600 text-white border-indigo-600 transform md:scale-105 shadow-md'
                           : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-600'
@@ -996,7 +996,7 @@ const App: React.FC = () => {
                 <div className={`flex ${sharedEventIds.length > 0 ? 'flex-col sm:flex-row sm:items-center justify-between gap-4 text-center sm:text-left' : 'items-center justify-between'}`}>
                   <h3 className={`${sharedEventIds.length > 0 ? 'text-2xl sm:text-3xl text-indigo-600' : 'text-xl text-gray-800'} font-bold`}>
                     {sharedEventIds.length > 0 
-                      ? '¡Mira el plan que armé! ¿Vamos?' 
+                      ? '¡Mira el Plan que armé! ¿Vamos?' 
                       : (explorationEvents.length === 0 ? 'Sin resultados' : 'Exploración de Eventos')}
                   </h3>
                   

@@ -79,7 +79,7 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="font-bold text-gray-900">Gestionar en mis planes</h3>
+          <h3 className="font-bold text-gray-900">Gestionar en mis Planes</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -87,7 +87,7 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
 
         <div className="p-4 max-h-[60vh] overflow-y-auto">
           <p className="text-sm text-gray-500 mb-4">
-            Selecciona los planes donde quieres guardar <span className="font-medium text-gray-900">"{event.title}"</span>
+            Selecciona los Planes donde quieres guardar <span className="font-medium text-gray-900">"{event.title}"</span>
           </p>
 
           <div className="space-y-2">
@@ -132,7 +132,7 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
               className="w-full mt-4 py-3 border border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-500 hover:border-indigo-300 hover:text-indigo-600 transition-all"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Crear nuevo plan
+              Crear nuevo Plan
             </button>
           ) : (
             <form onSubmit={handleCreatePlan} className="mt-4 bg-gray-50 p-3 rounded-xl">
@@ -141,7 +141,7 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
                 autoFocus
                 value={newPlanName}
                 onChange={(e) => setNewPlanName(e.target.value)}
-                placeholder="Nombre del plan..."
+                placeholder="Nombre del Plan..."
                 className="w-full p-2 border border-gray-200 rounded-lg mb-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
               />
               <div className="flex justify-end space-x-2">

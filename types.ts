@@ -16,13 +16,16 @@ export interface CulturalEvent {
 export enum EventCategory {
   ALL = 'Todas',
   MUSIC = 'Música',
-  VISUAL_ARTS = 'Artes Plásticas',
+  VISUAL_ARTS = 'Plásticas y Visuales',
   THEATER = 'Teatro',
   DANCE = 'Danza',
   LITERATURE = 'Literatura',
   CINEMA = 'Cine',
   TALKS = 'Charlas',
-  WORKSHOPS = 'Talleres'
+  WORKSHOPS = 'Talleres',
+  ACTIVATION = 'Activación',
+  SHOW = 'Espectáculo',
+  EXPERIENCES = 'Experiencias'
 }
 
 export interface FilterState {

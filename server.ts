@@ -5,6 +5,7 @@ import cors from "cors";
 import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
+import { Resend } from "resend";
 
 dotenv.config();
 
@@ -19,6 +20,20 @@ export function getStripe(): Stripe {
     stripeClient = new Stripe(key, { apiVersion: "2026-03-25.dahlia" as any });
   }
   return stripeClient;
+}
+
+// Helper para enviar correos con Resend
+let resendClient: Resend | null = null;
+
+export function getResend(): Resend {
+  if (!resendClient) {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) {
+      throw new Error('RESEND_API_KEY environment variable is required');
+    }
+    resendClient = new Resend(key);
+  }
+  return resendClient;
 }
 
 // Fetch config from Google Sheets for server-side rendering of meta tags
@@ -76,6 +91,58 @@ async function startServer() {
   // API routes FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.post("/api/send-reset-email", async (req, res) => {
+    console.log("API KEY presente:", !!process.env.RESEND_API_KEY);
+    
+    try {
+      const { email, resetLink } = req.body;
+      
+      if (!email || !resetLink) {
+        return res.status(400).json({ error: "Email and resetLink are required" });
+      }
+
+      // Verificación de email para la capa gratuita de Resend
+      if (email !== 'ananquin@gmail.com') {
+        console.warn(`Intento de envío a correo no autorizado en modo prueba: ${email}`);
+        return res.status(400).json({ error: "En modo de prueba, Resend solo permite enviar correos a ananquin@gmail.com" });
+      }
+
+      const resend = getResend();
+      
+      const htmlContent = `
+        <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <h1 style="color: #4f46e5; text-align: center;">¡Hola! Restablece tu contraseña de Qué Plan.</h1>
+          <p style="font-size: 16px; line-height: 1.5; text-align: center;">
+            Recibimos una solicitud para cambiar tu clave. No te preocupes, haz clic en el botón de abajo para elegir una nueva y seguir armando tus planes en Ensenada.
+          </p>
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${resetLink}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+              Cambiar contraseña
+            </a>
+          </div>
+        </div>
+      `;
+
+      const data = await resend.emails.send({
+        from: 'Qué Plan <onboarding@resend.dev>',
+        to: email,
+        subject: 'Restablece tu contraseña de Qué Plan',
+        html: htmlContent,
+      });
+
+      if (data.error) {
+        console.error("Resend API returned an error:", JSON.stringify(data.error, null, 2));
+        return res.status(500).json({ error: data.error.message || "Failed to send email via Resend" });
+      }
+
+      res.json({ success: true, data });
+    } catch (error: any) {
+      console.error("Resend error detallado:", JSON.stringify(error, null, 2));
+      console.error(error);
+      res.status(500).json({ error: error.message || "Failed to send email" });
+    }
   });
 
   app.post("/api/create-payment-intent", async (req, res) => {

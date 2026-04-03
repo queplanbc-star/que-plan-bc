@@ -174,12 +174,12 @@ export const EventModal: React.FC<EventModalProps> = ({ event, onClose, isInPlan
               {isInPlan ? (
                 <>
                   <Check className="w-5 h-5 mr-2" />
-                  Añadido a mis planes
+                  Añadido a mis Planes
                 </>
               ) : (
                 <>
                   <Plus className="w-5 h-5 mr-2" />
-                  Añadir a mi plan
+                  Añadir a mi Plan
                 </>
               )}
             </button>
