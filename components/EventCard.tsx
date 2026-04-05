@@ -70,7 +70,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isInPlan, onToggleP
             </div>
             <div className="flex items-center text-gray-500 text-xs sm:text-sm">
               <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 text-indigo-500" />
-              <span>{event.time}</span>
+              <span>{event.endTime ? `${event.time} - ${event.endTime}` : event.time}</span>
             </div>
             {!isCompact && event.location && (
                <div className="flex items-center text-gray-500 text-xs sm:text-sm">

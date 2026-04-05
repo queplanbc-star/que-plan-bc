@@ -5,6 +5,7 @@ export interface CulturalEvent {
   date: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   time: string; // HH:mm
+  endTime?: string; // HH:mm
   imageUrl: string;
   description?: string;
   location?: string;

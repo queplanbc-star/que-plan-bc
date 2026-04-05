@@ -120,7 +120,7 @@ export const EventModal: React.FC<EventModalProps> = ({ event, onClose, isInPlan
               <Clock className="w-5 h-5 text-indigo-600 mt-0.5" />
               <div>
                 <p className="font-semibold text-sm text-gray-500 uppercase tracking-wide">Hora</p>
-                <p className="font-medium text-lg">{event.time} horas</p>
+                <p className="font-medium text-lg">{event.endTime ? `${event.time} - ${event.endTime}` : `${event.time} horas`}</p>
               </div>
             </div>
 

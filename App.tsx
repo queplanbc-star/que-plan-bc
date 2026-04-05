@@ -311,6 +311,33 @@ const App: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
+  const isEventPast = (event: CulturalEvent) => {
+    const today = getLocalToday();
+    const eventEndDate = event.endDate || event.date;
+
+    if (eventEndDate < today) return true;
+    if (eventEndDate > today) return false;
+
+    // It's happening today (or ends today)
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTimeStr = `${String(currentHours).padStart(2, '0')}:${String(currentMinutes).padStart(2, '0')}`;
+
+    if (event.endTime) {
+      return event.endTime < currentTimeStr;
+    }
+
+    // If no endTime, consider it past 2 hours after start time
+    if (event.time) {
+      const [hours, minutes] = event.time.split(':').map(Number);
+      const eventTimePlus2 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours + 2, minutes);
+      return now > eventTimePlus2;
+    }
+
+    return false;
+  };
+
   const handleGoHome = () => {
     setViewMode('home');
     setSearchQuery('');
@@ -335,9 +362,7 @@ const App: React.FC = () => {
     }
 
     // Filter Past Events
-    const today = getLocalToday();
-    const eventEndDate = event.endDate || event.date;
-    if (eventEndDate < today) return false;
+    if (isEventPast(event)) return false;
 
     // Category Filter
     const matchesCategory = explorationCategories.length === 0 || explorationCategories.some(cat => {
@@ -356,9 +381,7 @@ const App: React.FC = () => {
   // 2. ARMA TU PLAN FILTER LOGIC
   const planEvents = events.filter(event => {
     // Filter Past Events
-    const today = getLocalToday();
-    const eventEndDate = event.endDate || event.date;
-    if (eventEndDate < today) return false;
+    if (isEventPast(event)) return false;
 
     // Category Filter (Independent)
     const matchesCategory = planCategories.length === 0 || planCategories.some(cat => {
@@ -369,6 +392,7 @@ const App: React.FC = () => {
 
     // Date Filter
     let matchesDate = true;
+    const eventEndDate = event.endDate || event.date;
     if (dateFilterStart && !dateFilterEnd) {
       // Exact match if only start date is provided, or if start date falls within event range
       matchesDate = event.date <= dateFilterStart && eventEndDate >= dateFilterStart;
@@ -431,7 +455,8 @@ const App: React.FC = () => {
     .filter(e => {
       const today = getLocalToday();
       const endDate = e.endDate || e.date;
-      return e.date <= today && endDate >= today;
+      const isToday = e.date <= today && endDate >= today;
+      return isToday && !isEventPast(e);
     })
     .sort((a, b) => a.time.localeCompare(b.time));
 
@@ -612,11 +637,11 @@ const App: React.FC = () => {
                     className="relative group"
                   >
                     {currentUser.photoURL ? (
-                      <img 
-                        src={currentUser.photoURL} 
-                        alt="Perfil" 
-                        className="w-9 h-9 rounded-full border border-gray-200 group-hover:border-indigo-400 transition-colors object-cover"
-                      />
+                        <img 
+                          src={currentUser.photoURL} 
+                          alt="Foto de perfil de usuario" 
+                          className="w-9 h-9 rounded-full border border-gray-200 group-hover:border-indigo-400 transition-colors object-cover"
+                        />
                     ) : (
                       <div className="w-9 h-9 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold group-hover:bg-indigo-200 transition-colors">
                         {currentUser.displayName ? currentUser.displayName[0].toUpperCase() : (currentUser.email ? currentUser.email[0].toUpperCase() : <UserIcon className="w-5 h-5" />)}
@@ -703,7 +728,7 @@ const App: React.FC = () => {
                         {currentUser.photoURL ? (
                           <img 
                             src={currentUser.photoURL} 
-                            alt="Perfil" 
+                            alt="Foto de perfil de usuario" 
                             className="w-8 h-8 rounded-full border border-gray-200 group-hover:border-indigo-400 object-cover"
                           />
                         ) : (
@@ -966,7 +991,7 @@ const App: React.FC = () => {
             {/* Category Buttons (Multi-select) - EXPLORATION */}
             {sharedEventIds.length === 0 && (
               <section className="mb-6">
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap lg:justify-center gap-2 md:gap-3 mb-2">
+                <div className="grid grid-cols-3 lg:flex lg:flex-wrap lg:justify-center gap-2 md:gap-3 mb-2">
                 {categoryList.map((cat) => {
                   const isSelected = cat === EventCategory.ALL 
                     ? explorationCategories.length === 0 

@@ -98,8 +98,8 @@ export const fetchAvatars = async (): Promise<string[]> => {
 export const fetchEvents = async (): Promise<CulturalEvent[]> => {
     // Se agrega headers=1 para intentar excluir la fila de encabezados de los datos devueltos
     // IMPORTANTE: El nombre de la hoja debe estar codificado (espacios -> %20)
-    // Added range A:J to include the new columns
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&range=A:J&headers=1`;
+    // Added range A:K to include the new columns
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&range=A:K&headers=1`;
 
     try {
         const response = await fetch(url);
@@ -129,7 +129,7 @@ export const fetchEvents = async (): Promise<CulturalEvent[]> => {
 
         // Nuevo Mapeo de columnas:
         // A(0): titulo, B(1): categoria, C(2): fecha_inicio, D(3): fecha_fin, 
-        // E(4): hora, F(5): costo, G(6): descripcion, H(7): lugar, I(8): link_mapa, J(9): imagen
+        // E(4): hora_inicio, F(5): hora_fin, G(6): costo, H(7): descripcion, I(8): lugar, J(9): link_mapa, K(10): imagen
         
         return rows.map((row: any, index: number) => {
             const c = row.c || [];
@@ -168,11 +168,25 @@ export const fetchEvents = async (): Promise<CulturalEvent[]> => {
             // Procesamiento de Fecha Fin (Columna D / Index 3)
             const endDateStr = parseDate(3);
 
-            // Procesamiento de Hora (Columna E / Index 4)
-            const timeStr = c[4]?.f || getVal(4);
+            // Helper para limpiar hora (asegurar formato HH:mm)
+            const formatTime = (timeStr: string) => {
+                if (!timeStr) return "";
+                // Si viene como "14:00:00", cortamos los segundos
+                const parts = timeStr.split(':');
+                if (parts.length >= 2) {
+                    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                }
+                return timeStr;
+            };
 
-            // Imagen fallback si está vacía (Columna J / Index 9)
-            const imgUrl = getVal(9) || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1000";
+            // Procesamiento de Hora Inicio (Columna E / Index 4)
+            const timeStr = formatTime(c[4]?.f || getVal(4));
+
+            // Procesamiento de Hora Fin (Columna F / Index 5)
+            const endTimeStr = formatTime(c[5]?.f || getVal(5));
+
+            // Imagen fallback si está vacía (Columna K / Index 10)
+            const imgUrl = getVal(10) || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1000";
 
             return {
                 id: `sheet-${index}`,
@@ -181,10 +195,11 @@ export const fetchEvents = async (): Promise<CulturalEvent[]> => {
                 date: dateStr, 
                 endDate: endDateStr || undefined,
                 time: timeStr,
-                cost: getVal(5),
-                description: getVal(6),
-                location: getVal(7),
-                mapsUrl: getVal(8),
+                endTime: endTimeStr || undefined,
+                cost: getVal(6),
+                description: getVal(7),
+                location: getVal(8),
+                mapsUrl: getVal(9),
                 imageUrl: imgUrl,
             };
         });
